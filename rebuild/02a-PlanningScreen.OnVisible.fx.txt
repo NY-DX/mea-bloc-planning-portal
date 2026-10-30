@@ -1,0 +1,62 @@
+// PlanningScreen.OnVisible: load the current General Manager's departments and employees.
+// Everything this screen creates is prefixed "ps", so it never depends on the old screens.
+Set(psUserEmail, Lower(User().Email));
+ClearCollect(
+    psDepts,
+    Filter(DepartmentTable, Lower(GeneralManager.Email) = psUserEmail)
+);
+
+// Direct employees: home address code is one of the GM's departments
+Clear(psEmployees);
+ForAll(
+    psDepts As dept,
+    Collect(
+        psEmployees,
+        ForAll(
+            Filter(EmployeeTable, AddressCode.Value = dept.AddressCode) As emp,
+            {
+                ID: emp.ID,
+                FullName: Trim(emp.'FirstName ' & " " & emp.'MiddleName ' & " " & emp.'LastName '),
+                AddressCode: emp.AddressCode.Value,
+                EmployeeNo: emp.'Employee ID',
+                Kind: "Direct"
+            }
+        )
+    )
+);
+
+// Mobility employees: a status record (any year) assigns them to one of the GM's departments.
+// Matched by employee ID (the old screen matched by last name).
+Clear(psMobilityIds);
+ForAll(
+    psDepts As dept,
+    Collect(
+        psMobilityIds,
+        ForAll(
+            Filter(EmployeeStatusTable, MobilityAC.Value = dept.AddressCode) As st,
+            {EmpId: st.Employee.Id}
+        )
+    )
+);
+ForAll(
+    Filter(Distinct(psMobilityIds, EmpId), !(Value in psEmployees.ID)) As mob,
+    With(
+        {emp: LookUp(EmployeeTable, ID = mob.Value)},
+        If(
+            !IsBlank(emp),
+            Collect(
+                psEmployees,
+                {
+                    ID: emp.ID,
+                    FullName: Trim(emp.'FirstName ' & " " & emp.'MiddleName ' & " " & emp.'LastName '),
+                    AddressCode: emp.AddressCode.Value,
+                    EmployeeNo: emp.'Employee ID',
+                    Kind: "Mobility"
+                }
+            )
+        )
+    )
+);
+
+// Keep the selection only if that employee is still in the list
+If(!(psSelected.ID in psEmployees.ID), Set(psSelected, Blank()));

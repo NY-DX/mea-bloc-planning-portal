@@ -1,0 +1,12 @@
+// Set these two properties by hand (select the control, choose the property, paste the formula).
+
+// lblMainTitle  >  Text
+If(IsBlank(psSelected), "SELECT AN EMPLOYEE", Upper(psSelected.FullName))
+
+// lblMainPlaceholder  >  Text
+If(
+    IsBlank(psSelected),
+    "Pick someone from the list on the left.",
+    psSelected.AddressCode & "  ·  " & psSelected.EmployeeNo &
+    If(psSelected.Kind = "Mobility", "  ·  Mobility (assigned to one of your departments)", "")
+)

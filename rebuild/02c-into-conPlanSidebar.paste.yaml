@@ -1,0 +1,77 @@
+- galPsEmployees:
+    Control: Gallery@2.15.0
+    Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      BorderThickness: =0
+      FillPortions: =1
+      Items: |-
+        =Sort(
+            Filter(
+                psEmployees,
+                IsBlank(txtPsSearch.Value) ||
+                txtPsSearch.Value in FullName ||
+                txtPsSearch.Value in EmployeeNo
+            ),
+            Kind & "|" & FullName
+        )
+      OnSelect: =Set(psSelected, ThisItem)
+      TemplateFill: =If(ThisItem.ID = psSelected.ID, RGBA(212, 160, 23, 0.15), RGBA(0, 0, 0, 0))
+      TemplateSize: =60
+    Children:
+      - lblPsEmpBar:
+          Control: Label@2.5.1
+          Properties:
+            Fill: =uiGold
+            Height: =Parent.TemplateHeight - 16
+            OnSelect: =Select(Parent)
+            Text: =""
+            Visible: =ThisItem.ID = psSelected.ID
+            Width: =4
+            X: =0
+            Y: =8
+      - lblPsEmpName:
+          Control: Label@2.5.1
+          Properties:
+            Color: =uiInk
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            OnSelect: =Select(Parent)
+            Size: =12
+            Text: =ThisItem.FullName
+            Width: =Parent.TemplateWidth - 24
+            X: =14
+            Y: =8
+      - lblPsEmpSub:
+          Control: Label@2.5.1
+          Properties:
+            Color: =uiMuted
+            Height: =18
+            OnSelect: =Select(Parent)
+            Size: =9
+            Text: =ThisItem.AddressCode & "  ·  " & ThisItem.EmployeeNo
+            Width: =Parent.TemplateWidth - 110
+            X: =14
+            Y: =32
+      - lblPsEmpTag:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =uiGold
+            FontWeight: =FontWeight.Bold
+            Height: =18
+            OnSelect: =Select(Parent)
+            Size: =8
+            Text: =If(ThisItem.Kind = "Mobility", "MOBILITY", "")
+            Width: =80
+            X: =Parent.TemplateWidth - 92
+            Y: =32
+      - lblPsEmpLine:
+          Control: Label@2.5.1
+          Properties:
+            Fill: =RGBA(0, 0, 0, 0.08)
+            Height: =1
+            Text: =""
+            Width: =Parent.TemplateWidth
+            X: =0
+            Y: =Parent.TemplateHeight - 1

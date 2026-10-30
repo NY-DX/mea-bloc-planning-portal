@@ -1,0 +1,16 @@
+- txtPsSearch:
+    Control: TextInput@0.0.54
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      FillPortions: =0
+      Height: =34
+      Placeholder: ="Search name or employee ID"
+- lblPsCount:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiMuted
+      FillPortions: =0
+      Height: =18
+      Size: =9
+      Text: =CountRows(galPsEmployees.AllItems) & " of " & CountRows(psEmployees) & " employees"
