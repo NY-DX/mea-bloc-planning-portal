@@ -7,3 +7,5 @@
 !Src/
 !Src/*.pa.yaml
 Src/_EditorState.pa.yaml
+!paste-snippets/
+!paste-snippets/*.yaml
