@@ -1,0 +1,9 @@
+# Only the readable Power Fx source (Src/*.pa.yaml) is tracked.
+# Everything else in an .msapp is derived, large, or contains tenant details
+# (data source URLs, author, connection info) and must stay out of the repo.
+*
+!.gitignore
+!README.md
+!Src/
+!Src/*.pa.yaml
+Src/_EditorState.pa.yaml

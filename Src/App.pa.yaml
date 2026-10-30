@@ -1,0 +1,40 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+App:
+  Properties:
+    OnStart: |-
+      =Set(varCurrentUserEmail, Lower(User().Email));
+      Set(
+          varIsGM,
+          CountRows(
+              Filter(
+                  DepartmentTable,
+                  Lower(GeneralManager.Email) = varCurrentUserEmail
+              )
+          ) > 0
+      );
+
+      // Fiscal year base: increments on April 1st instead of January 1st
+      Set(
+          varFiscalYearBase,
+          If(Month(Today()) >= 4, Year(Today()), Year(Today()) - 1)
+      );
+
+      ClearCollect(
+          colPlanningDates,
+          ForAll(
+              Sequence(5, 0),
+              {
+                  DateValue: Date(varFiscalYearBase + Value + 1, 4, 1),
+                  DisplayYear: Text(varFiscalYearBase + Value + 1),
+                  IsSelected: Value = 0
+              }
+          )
+      )
+    Theme: =PowerAppsTheme

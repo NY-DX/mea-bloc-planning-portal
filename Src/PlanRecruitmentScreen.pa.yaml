@@ -1,0 +1,915 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  PlanRecruitmentScreen:
+    Properties:
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnVisible: |-
+        =Set(varSelectedDepartment, 
+            First(
+                Filter(
+                    DepartmentTable,
+                    Lower(GeneralManager.Email) = Lower(User().Email)
+                )
+            )
+        );
+
+        //Set(varSelectedRecord, Blank())
+    Children:
+      - galPlanningRecrutment:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
+          Properties:
+            BorderColor: =RGBA(0, 0, 1, 1)
+            BorderThickness: =4
+            Height: =584
+            Items: |+
+              =Filter(
+                  DepartmentTable,
+                  Lower(GeneralManager.Email) = Lower(User().Email)
+              )
+            OnSelect: =Set(varSelectedDepartment, ThisItem)
+            TemplateSize: =133
+            Width: =179
+            X: =41
+            Y: =68
+          Children:
+            - Title2:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Color: =RGBA(50, 49, 48, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =Self.Size * 1.8
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =14
+                  Text: =ThisItem.AddressCode
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =Parent.TemplateWidth - 86
+                  X: =16
+                  Y: =(Parent.TemplateHeight - (Self.Size*1.8 + Subtitle3.Size*1.8 + 2 + Body2.Size*1.8)) / 2
+            - Subtitle3:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =Self.Size * 1.8
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =12
+                  Text: =
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =Title2.Width
+                  X: =Title2.X
+                  Y: =Title2.Y + Title2.Height
+            - Body2:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =Self.Size * 1.8
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =12
+                  Text: =
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =Title2.Width
+                  X: =14
+                  Y: =62
+            - NextArrow2:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  AccessibleLabel: =Self.Tooltip
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(166, 166, 166, 1)
+                  Height: =50
+                  Icon: =Icon.ChevronRight
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =16
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =16
+                  Tooltip: ="View item details"
+                  Width: =50
+                  X: =Parent.TemplateWidth - Self.Width - 12
+                  Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+            - Separator2:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Height: =8
+                  OnSelect: =Select(Parent)
+                  Width: =Parent.TemplateWidth
+                  Y: =Parent.TemplateHeight - Self.Height
+            - Rectangle2:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Fill: =RGBA(0, 18, 107, 1)
+                  Height: =Parent.TemplateHeight - Separator2.Height
+                  OnSelect: =Select(Parent)
+                  Visible: =ThisItem.IsSelected
+                  Width: =4
+      - radPlanningDateP:
+          Control: Radio@0.0.25
+          Properties:
+            DefaultSelectedItems: |-
+              =First(
+                  ForAll(
+                      colPlanningDates,
+                      Text(DateValue, "yyyy")
+                  )
+              )
+            FontSize: =16
+            Height: =78
+            Items: |-
+              =ForAll(
+                  colPlanningDates,
+                  Text(DateValue, "yyyy")
+              )
+            Layout: ='RadioGroupCanvas.Layout'.HorizontalStacked
+            RadioSize: =20
+            Width: =532
+            X: =241
+            Y: =59
+      - TextCanvas1_1:
+          Control: Text@0.0.51
+          Properties:
+            Height: =43
+            Size: =20
+            Text: ="Planning Date (Select one)"
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =328
+            X: =241
+            Y: =16
+      - Form1:
+          Control: Form@2.4.4
+          Layout: Vertical
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            DataSource: =DepartmentStatusTable
+            DefaultMode: =FormMode.New
+            Height: =230
+            Item: |-
+              = LookUp(
+                  DepartmentStatusTable,
+                  AddressCode.Value = varSelectedDepartment.AddressCode &&
+                  Date = Date(Year(radPlanningDateP.Selected.Value), 4, 1)
+              )
+            Width: =1101
+            X: =232
+            Y: =138
+          Children:
+            - Recruitment_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: NumberEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Recruitment"
+                  Default: =1
+                  DisplayName: =DataSourceInfo([@DepartmentStatusTable],DataSourceInfo.DisplayName,Recruitment)
+                  Required: =true
+                  Update: =Value(txtRecruitment.Value)
+                  Width: =367
+                  X: =0
+                  Y: =0
+                Children:
+                  - DataCardKey23:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - txtRecruitment:
+                      Control: NumberInput@2.9.12
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DisplayMode: =Parent.DisplayMode
+                        Max: =Blank()
+                        Min: =1
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Value: =Parent.Default
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey23.Y + DataCardKey23.Height + 4
+                  - ErrorMessage23:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =txtRecruitment.Y + txtRecruitment.Height
+                  - StarVisible23:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey23.Y
+            - Division_DataCard2:
+                Control: TypedDataCard@1.0.7
+                Variant: ComboBoxEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Division"
+                  Default: =ThisItem.Division
+                  DisplayName: =DataSourceInfo([@DepartmentStatusTable],DataSourceInfo.DisplayName,Division)
+                  Required: =false
+                  Update: =drpDivisionP.Selected
+                  Width: =367
+                  X: =1
+                  Y: =0
+                Children:
+                  - DataCardKey29:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: ="HR Code"
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - drpDivisionP:
+                      Control: ComboBox@0.0.51
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DefaultSelectedItems: =[Parent.Default]
+                        DisplayMode: =Parent.DisplayMode
+                        Items: =Choices([@DepartmentStatusTable].Division)
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey29.Y + DataCardKey29.Height + 4
+                  - ErrorMessage29:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =drpDivisionP.Y + drpDivisionP.Height
+                  - StarVisible29:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =20
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey29.Y
+            - EmploymentType_DataCard2:
+                Control: TypedDataCard@1.0.7
+                Variant: ComboBoxEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="EmploymentType"
+                  Default: =ThisItem.EmploymentType
+                  DisplayName: =DataSourceInfo([@DepartmentStatusTable],DataSourceInfo.DisplayName,EmploymentType)
+                  Required: =false
+                  Update: =drpEmpTypeP.Selected
+                  Width: =367
+                  X: =2
+                  Y: =0
+                Children:
+                  - DataCardKey27:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: ="Biz/Corp"
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - drpEmpTypeP:
+                      Control: ComboBox@0.0.51
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DefaultSelectedItems: =[Parent.Default]
+                        DisplayMode: =Parent.DisplayMode
+                        Items: =Choices([@DepartmentStatusTable].EmploymentType)
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey27.Y + DataCardKey27.Height + 4
+                  - ErrorMessage27:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =drpEmpTypeP.Y + drpEmpTypeP.Height
+                  - StarVisible27:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =20
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey27.Y
+            - RegionalGrade_DataCard2:
+                Control: TypedDataCard@1.0.7
+                Variant: ComboBoxEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="RegionalGrade"
+                  Default: =ThisItem.RegionalGrade
+                  DisplayName: =DataSourceInfo([@DepartmentStatusTable],DataSourceInfo.DisplayName,RegionalGrade)
+                  Required: =false
+                  Update: =DataCardValue2.Selected
+                  Width: =367
+                  X: =0
+                  Y: =1
+                Children:
+                  - DataCardKey2:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - DataCardValue2:
+                      Control: ComboBox@0.0.51
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DefaultSelectedItems: =[Parent.Default]
+                        DisplayMode: =Parent.DisplayMode
+                        Items: =Choices([@DepartmentStatusTable].RegionalGrade)
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey2.Y + DataCardKey2.Height + 4
+                  - ErrorMessage2:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardValue2.Y + DataCardValue2.Height
+                  - StarVisible2:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =20
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey2.Y
+            - GlobalGrade_DataCard2:
+                Control: TypedDataCard@1.0.7
+                Variant: ComboBoxEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="GlobalGrade"
+                  Default: =ThisItem.GlobalGrade
+                  DisplayName: =DataSourceInfo([@DepartmentStatusTable],DataSourceInfo.DisplayName,GlobalGrade)
+                  Required: =false
+                  Update: =drpGradeP.Selected
+                  Width: =367
+                  X: =1
+                  Y: =1
+                Children:
+                  - DataCardKey26:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - drpGradeP:
+                      Control: ComboBox@0.0.51
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DefaultSelectedItems: |+
+                          =Switch(
+                              DataCardValue2.Selected.Value,   // Regional Grade dropdown on recruitment form
+                              "(MEA) G1", {Value: "GG5"},
+                              "(MEA) G1+", {Value: "GG5"},
+                              "(MEA) G2", {Value: "GG5"},
+                              "(MEA) G2+", {Value: "GG5"},
+                              "(MEA) G3", {Value: "GG4"},
+                              "(MEA) G3+", {Value: "GG4"},
+                              "(MEA) G4M / G4P", {Value: "GG3"},
+                              "(MEA) M2/G5", {Value: "GG2"},
+                              "(MEA) M2+/G6", {Value: "GG2"},
+                              "(MEA) M1/G7", {Value: "GG1"},
+                              {Value: "GG5"}   // Fallback if nothing matches
+                          )
+                        DisplayMode: =DisplayMode.View
+                        Items: =Choices([@DepartmentStatusTable].GlobalGrade)
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey26.Y + DataCardKey26.Height + 4
+                  - ErrorMessage26:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =drpGradeP.Y + drpGradeP.Height
+                  - StarVisible26:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =20
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey26.Y
+            - HQEmployment_DataCard2:
+                Control: TypedDataCard@1.0.7
+                Variant: ToggleEdit
+                IsLocked: true
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="HQEmployment"
+                  Default: =ThisItem.HQEmployment
+                  DisplayName: =DataSourceInfo([@DepartmentStatusTable],DataSourceInfo.DisplayName,HQEmployment)
+                  Required: =false
+                  Update: =tglHQP.Checked
+                  Width: =367
+                  X: =2
+                  Y: =1
+                Children:
+                  - DataCardKey28:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - tglHQP:
+                      Control: Toggle@1.1.5
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                        Checked: =Parent.Default
+                        DisplayMode: =Parent.DisplayMode
+                        Height: =32
+                        Label: =""
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey28.Y + DataCardKey28.Height + 4
+                  - ErrorMessage28:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =tglHQP.Y + tglHQP.Height
+                  - StarVisible28:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey28.Y
+            - Remark_DataCard2:
+                Control: TypedDataCard@1.0.7
+                Variant: TextualEdit
+                IsLocked: true
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Remark"
+                  Default: =ThisItem.Remark
+                  DisplayName: =DataSourceInfo([@DepartmentStatusTable],DataSourceInfo.DisplayName,Remark)
+                  MaxLength: =DataSourceInfo([@DepartmentStatusTable], DataSourceInfo.MaxLength, Remark)
+                  Required: =false
+                  Update: =DataCardValue3.Value
+                  Width: =367
+                  X: =0
+                  Y: =2
+                Children:
+                  - DataCardKey3:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - DataCardValue3:
+                      Control: TextInput@0.0.54
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DisplayMode: =Parent.DisplayMode
+                        Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Value: =Parent.Default
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey3.Y + DataCardKey3.Height + 4
+                  - ErrorMessage3:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardValue3.Y + DataCardValue3.Height
+                  - StarVisible3:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey3.Y
+            - Mobility_DataCard3:
+                Control: TypedDataCard@1.0.7
+                Variant: ToggleEdit
+                IsLocked: true
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Mobility"
+                  Default: =ThisItem.Mobility
+                  DisplayName: =DataSourceInfo([@DepartmentStatusTable],DataSourceInfo.DisplayName,Mobility)
+                  Required: =false
+                  Update: =DataCardValue24.Checked
+                  Width: =367
+                  X: =1
+                  Y: =2
+                Children:
+                  - DataCardKey16:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - DataCardValue24:
+                      Control: Toggle@1.1.5
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                        Checked: =Parent.Default
+                        DisplayMode: =Parent.DisplayMode
+                        Height: =32
+                        Label: =""
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey16.Y + DataCardKey16.Height + 4
+                  - ErrorMessage16:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardValue24.Y + DataCardValue24.Height
+                  - StarVisible16:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey16.Y
+      - btnSubmit:
+          Control: Button@0.0.45
+          Properties:
+            DisplayMode: |-
+              =If(
+                  IsBlank(drpDivisionP.Selected.Value) || 
+                  IsBlank(DataCardValue2.Selected.Value) ||
+                  IsBlank(drpEmpTypeP.Selected.Value)
+                  ,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Height: =47
+            OnSelect: "=// ============================================\r\n// FINAL WORKING VERSION - MULTI-YEAR SUBMISSION\r\n// ============================================\r\n\r\n// \U0001F539 Determine correct Biz/Corp based on HR Code\r\nSet(\r\n    varExpectedBizCorp,\r\n    Switch(\r\n        drpDivisionP.Selected.Value,\r\n        // Business HR Codes\r\n        \"Iron & Steel Products\", \"Business\",\r\n        \"Mineral & Metal Resources\", \"Business\",\r\n        \"Energy I\", \"Business\",\r\n        \"Energy II\", \"Business\",\r\n        \"Energy Solution\", \"Business\",\r\n        \"Infrastructure Projects\", \"Business\",\r\n        \"Mobility I\", \"Business\",\r\n        \"Mobility II\", \"Business\",\r\n        \"Basic Materials\", \"Business\",\r\n        \"Performance Materials\", \"Business\",\r\n        \"Nutrition & Agriculture\", \"Business\",\r\n        \"Food\", \"Business\",\r\n        \"Retail\", \"Business\",\r\n        \"Wellness\", \"Business\",\r\n        \"IT & Communication\", \"Business\",\r\n        \"Corporate Development\", \"Business\",\r\n        \r\n        // GCS HR Codes\r\n        \"DX\", \"GCS\",\r\n        \"CFO\", \"GCS\",\r\n        \"Legal\", \"GCS\",\r\n        \r\n        // Non-GCS HR Codes\r\n        \"Human Resources & General Affairs\", \"Non-GCS\",\r\n        \"Regional CSO\", \"Non-GCS\",\r\n        \r\n        // Default\r\n        \"\"\r\n    )\r\n);\r\n\r\n// \U0001F539 Check for discrepancy\r\nSet(\r\n    varHasDiscrepancy,\r\n    !IsBlank(varExpectedBizCorp) && \r\n    !IsBlank(drpEmpTypeP.Selected.Value) &&\r\n    varExpectedBizCorp <> drpEmpTypeP.Selected.Value\r\n);\r\n\r\n// Step 1: Capture all form values in variables\r\nSet(varSelectedDeptID, varSelectedDepartment.ID);\r\nSet(varSelectedDeptCode, varSelectedDepartment.AddressCode);\r\n\r\n// Step 2: Create collection of years to save\r\nClearCollect(\r\n    colYearsToSave,\r\n    // Always include the selected year\r\n    {Year: Value(radPlanningDateP.Selected.Value)}\r\n);\r\n\r\n// Add additional years based on checkbox selections\r\nIf(chkYear1.Visible && chkYear1.Checked, \r\n    Collect(colYearsToSave, {Year: varFiscalYearBase + 2})\r\n);\r\nIf(chkYear2.Visible && chkYear2.Checked, \r\n    Collect(colYearsToSave, {Year: varFiscalYearBase + 3})\r\n);\r\nIf(chkYear3.Visible && chkYear3.Checked, \r\n    Collect(colYearsToSave, {Year: varFiscalYearBase + 4})\r\n);\r\nIf(chkYear4.Visible && chkYear4.Checked, \r\n    Collect(colYearsToSave, {Year: varFiscalYearBase + 5})\r\n);\r\n\r\n\r\n// Step 3: Create records for each selected year\r\nForAll(\r\n    colYearsToSave,\r\n    Patch(\r\n        DepartmentStatusTable,\r\n        Defaults(DepartmentStatusTable),\r\n        {\r\n            AddressCode: {\r\n                '@odata.type': \"#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference\",\r\n                Id: varSelectedDeptID,\r\n                Value: varSelectedDeptCode\r\n            },\r\n            Date: Date(Year, 4, 1),\r\n            Recruitment: txtRecruitment.Value,\r\n            GlobalGrade: {Value: drpGradeP.Selected.Value},\r\n            RegionalGrade: {Value: DataCardValue2.Selected.Value},\r\n            HQEmployment: tglHQP.Checked,\r\n            Mobility: tglMobility.Checked,\r\n            EmploymentType: {Value: drpEmpTypeP.Selected.Value},\r\n            Division: {Value: drpDivisionP.Selected.Value},\r\n            Title: GUID(),\r\n            // Discrepancy: varHasDiscrepancy,\r\n            'Last Updated': Now()\r\n        }\r\n    )\r\n);\r\n\r\n// Step 4: Show success notification with details\r\nNotify(\r\n    \"Successfully created \" & CountRows(colYearsToSave) & \" record(s) for years: \" & \r\n    Concat(colYearsToSave, Text(Year), \", \"),\r\n    NotificationType.Success,\r\n    4000\r\n);\r\n\r\n// Step 5: Reset checkboxes after submission\r\nReset(chkYear1);\r\nReset(chkYear2);\r\nReset(chkYear3);\r\nReset(chkYear4);\r\n\r\n// Step 6: Clear the collection\r\nClear(colYearsToSave);"
+            Text: ="Submit"
+            Width: =113
+            X: =1223
+            Y: =665
+      - btnCancel1:
+          Control: Button@0.0.45
+          Properties:
+            Height: =47
+            OnSelect: =Navigate(HomeScreen)
+            Text: ="Main Menu"
+            Width: =111
+            X: =41
+            Y: =665
+      - TextCanvas3:
+          Control: Text@0.0.51
+          Properties:
+            Height: =112
+            Text: |+
+              ="Department ID: " & varSelectedDepartment.ID & 
+              " | Department Code: " & varSelectedDepartment.AddressCode &
+              " | Selected Year: " & Year(radPlanningDateP.Selected.Value) &
+              " | Selected Date Value: " & Text(radPlanningDateP.Selected.Value)
+
+            Visible: =false
+            Width: =343
+            X: =993
+            Y: =16
+      - galRecruitmentList:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Flexible_SocialFeed_ver5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderThickness: =4
+            Height: =235
+            Items: |-
+              =Filter(
+                  DepartmentStatusTable,
+                  AddressCode.Id = varSelectedDepartment.ID &&
+                  Year(Date) = Year(radPlanningDateP.Selected.Value)
+              )
+            OnSelect: |-
+              =// Set(varSelectedRecord, ThisItem);
+              // EditForm(Form1)
+            TemplateSize: =66
+            Width: =1101
+            X: =232
+            Y: =418
+          Children:
+            - Title1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Color: =RGBA(50, 49, 48, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =25
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =14
+                  Text: =ThisItem.Division.Value
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =215
+                  X: =96
+                  Y: =
+            - Body4:
+                Control: Label@2.5.1
+                Properties:
+                  AutoHeight: =true
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =20
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =12
+                  Text: =ThisItem.AddressCode.Value
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =87
+                  X: =9
+                  Y: =
+            - Title1_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Color: =RGBA(50, 49, 48, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =29
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =14
+                  Text: =ThisItem.Recruitment
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =99
+                  X: =212
+                  Y: =25
+            - TextCanvas5:
+                Control: Text@0.0.51
+                Properties:
+                  Height: =42
+                  Text: =ThisItem.'Last Updated'
+                  Width: =106
+                  X: =600
+                  Y: =25
+            - TextCanvas6:
+                Control: Text@0.0.51
+                Properties:
+                  Height: =41
+                  Text: =ThisItem.EmploymentType.Value
+                  Weight: ='TextCanvas.Weight'.Bold
+                  Width: =127
+                  X: =367
+                  Y: =25
+            - TextCanvas7:
+                Control: Text@0.0.51
+                Properties:
+                  Height: =31
+                  Text: ="Recruitment:"
+                  Width: =116
+                  X: =96
+                  Y: =25
+            - TextCanvas8:
+                Control: Text@0.0.51
+                Properties:
+                  Size: =18
+                  Text: =ThisItem.GlobalGrade.Value
+                  Weight: ='TextCanvas.Weight'.Bold
+                  X: =311
+            - TextCanvas5_1:
+                Control: Text@0.0.51
+                Properties:
+                  Height: =42
+                  Text: ="Last Updated:"
+                  Weight: ='TextCanvas.Weight'.Bold
+                  Width: =106
+                  X: =494
+                  Y: =23
+            - Icon1:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(0, 18, 107, 1)
+                  Icon: =Icon.Trash
+                  OnSelect: =Remove(DepartmentStatusTable,ThisItem)
+                  X: =1027
+                  Y: =2
+      - Label1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Height: =78
+            Text: |-
+              =//If(
+                  //IsBlank(varSelectedRecord),
+                  //"➕ Adding New Recruitment Plan",
+                  //"✏️ Editing: " & varSelectedRecord.AddressCode.Value & " - " & varSelectedRecord.Division.Value
+              //)
+            Width: =319
+            X: =621
+            Y: =50
+      - ButtonCanvas3:
+          Control: Button@0.0.45
+          Properties:
+            Height: =47
+            OnSelect: |-
+              =//Set(varSelectedRecord, Blank());
+              NewForm(Form1);
+              ResetForm(Form1)
+            Text: ="Clear"
+            Visible: =false
+            Width: =111
+            X: =1083
+            Y: =665
+      - TextCanvas1_2:
+          Control: Text@0.0.51
+          Properties:
+            Height: =43
+            Size: =20
+            Text: ="Existing Records"
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =328
+            X: =241
+            Y: =375
+      - TextCanvas1_3:
+          Control: Text@0.0.51
+          Properties:
+            Height: =43
+            Size: =20
+            Text: ="Department"
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =179
+            X: =41
+            Y: =16
+      - chkYear1:
+          Control: CheckBox@0.0.30
+          Properties:
+            Label: =Text(Year(Now()) + 1)
+            Visible: |-
+              =Value(radPlanningDateP.Selected.Value) >= varFiscalYearBase + 1 && 
+              Value(radPlanningDateP.Selected.Value) < varFiscalYearBase + 2
+            X: =550
+            Y: =375
+      - chkYear2:
+          Control: CheckBox@0.0.30
+          Properties:
+            Label: =Text(Year(Now()) + 2)
+            Visible: |-
+              =Value(radPlanningDateP.Selected.Value) >= varFiscalYearBase + 1 && 
+              Value(radPlanningDateP.Selected.Value) < varFiscalYearBase + 3
+            X: =641
+            Y: =375
+      - chkYear3:
+          Control: CheckBox@0.0.30
+          Properties:
+            Label: =Text(Year(Now()) + 3)
+            Visible: |-
+              =Value(radPlanningDateP.Selected.Value) >= varFiscalYearBase + 1 && 
+              Value(radPlanningDateP.Selected.Value) < varFiscalYearBase + 4
+            X: =746
+            Y: =375
+      - chkYear4:
+          Control: CheckBox@0.0.30
+          Properties:
+            Label: =Text(Year(Now()) + 4)
+            Visible: |-
+              =Value(radPlanningDateP.Selected.Value) >= varFiscalYearBase + 1 && 
+              Value(radPlanningDateP.Selected.Value) < varFiscalYearBase + 5
+            X: =848
+            Y: =375

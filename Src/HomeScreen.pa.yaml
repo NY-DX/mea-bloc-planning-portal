@@ -1,0 +1,372 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  HomeScreen:
+    Properties:
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnVisible: |-
+        =// ═══════════════════════════════════════════════════════════════
+        // STEP 1: GET MANAGER'S DEPARTMENTS (keep full records)
+        // ═══════════════════════════════════════════════════════════════
+        ClearCollect(
+            colManagerDepts,
+            Filter(
+                DepartmentTable,
+                Lower(GeneralManager.Email) = varCurrentUserEmail
+            )
+        );
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 2: DIRECT EMPLOYEES (delegable per department)
+        // ═══════════════════════════════════════════════════════════════
+        Clear(colDirectEmployees);
+        ForAll(
+            colManagerDepts As dept,
+            Collect(
+                colDirectEmployees,
+                Filter(EmployeeTable, AddressCode.Value = dept.AddressCode)
+            )
+        );
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 3: DIRECT EMPLOYEE STATUS RECORDS (delegable per employee)
+        // ═══════════════════════════════════════════════════════════════
+        Clear(colDirectStatus);
+        ForAll(
+            colDirectEmployees As emp,
+            Collect(
+                colDirectStatus,
+                Filter(EmployeeStatusTable, Employee.Id = emp.ID)
+            )
+        );
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 4: MOBILITY - Find status records pointing to manager's depts
+        // ═══════════════════════════════════════════════════════════════
+        Clear(colMobilityAssignments);
+        ForAll(
+            colManagerDepts As dept,
+            Collect(
+                colMobilityAssignments,
+                Filter(EmployeeStatusTable, MobilityAC.Value = dept.AddressCode)
+            )
+        );
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 5: GET UNIQUE MOBILITY EMPLOYEE IDs (exclude direct employees)
+        // ═══════════════════════════════════════════════════════════════
+        ClearCollect(
+            colMobilityEmployeeIds,
+            Filter(
+                Distinct(colMobilityAssignments, Employee.Id),
+                !(Value in colDirectEmployees.ID)
+            )
+        );
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 6: GET MOBILITY EMPLOYEE RECORDS (delegable per employee)
+        // ═══════════════════════════════════════════════════════════════
+        Clear(colMobilityEmployees);
+        ForAll(
+            colMobilityEmployeeIds As mobId,
+            Collect(
+                colMobilityEmployees,
+                LookUp(EmployeeTable, ID = mobId.Value)
+            )
+        );
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 7: GET ALL STATUS RECORDS FOR MOBILITY EMPLOYEES (all 6 years)
+        // ═══════════════════════════════════════════════════════════════
+        Clear(colMobilityStatus);
+        ForAll(
+            colMobilityEmployees As mobEmp,
+            Collect(
+                colMobilityStatus,
+                Filter(EmployeeStatusTable, Employee.Id = mobEmp.ID)
+            )
+        );
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 8: COMBINE BOTH PARTITIONS
+        // ═══════════════════════════════════════════════════════════════
+        ClearCollect(colManagerEmployees, colDirectEmployees);
+        Collect(colManagerEmployees, colMobilityEmployees);
+
+        ClearCollect(colEmployeeStatus, colDirectStatus);
+        Collect(colEmployeeStatus, colMobilityStatus);
+
+        // ═══════════════════════════════════════════════════════════════
+        // DEBUG COUNTERS (remove after testing)
+        // ═══════════════════════════════════════════════════════════════
+        Set(varDebugDirect, CountRows(colDirectEmployees));
+        Set(varDebugMobility, CountRows(colMobilityEmployees));
+        Set(varDebugDirectStatus, CountRows(colDirectStatus));
+        Set(varDebugMobilityStatus, CountRows(colMobilityStatus));
+        Set(varDebugTotalEmployees, CountRows(colManagerEmployees));
+        Set(varDebugTotalStatus, CountRows(colEmployeeStatus))
+    Children:
+      - ScreenContainer2:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            Fill: =RGBA(245, 245, 245, 1)
+            Height: =Parent.Height
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =16
+            LayoutJustifyContent: =LayoutJustifyContent.Center
+            PaddingBottom: =16
+            PaddingLeft: =16
+            PaddingRight: =16
+            PaddingTop: =16
+            Width: =Parent.Width
+          Children:
+            - HeaderContainer2:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  Fill: =RGBA(255, 255, 255, 1)
+                  FillPortions: =0
+                  Height: =75
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  RadiusBottomLeft: =8
+                  RadiusBottomRight: =8
+                  RadiusTopLeft: =8
+                  RadiusTopRight: =8
+                Children:
+                  - Header1:
+                      Control: Header@0.0.44
+                      Properties:
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        Logo: ='21beacfd-2c38-4d70-ab2b-f0f1e4c4f823'
+                        Style: ='Header.Style'.Light
+                        Title: ="Welcome to the MEA Bloc Personnel Planning Portal – your one-stop hub for managing and forecasting workforce changes"
+            - MainContainer2:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(245, 245, 245, 1)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =16
+                  LayoutMaxHeight: =
+                  LayoutMaxWidth: =
+                  LayoutOverflowY: =LayoutOverflow.Scroll
+                  LayoutWrap: =true
+                  PaddingBottom: =2
+                  PaddingLeft: =2
+                  PaddingRight: =2
+                  PaddingTop: =2
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                Children:
+                  - Container31:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255, 255, 255, 1)
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =5
+                        LayoutJustifyContent: =LayoutJustifyContent.Center
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =300
+                        LayoutMinWidth: =If(HomeScreen.Size = ScreenSize.Small, Parent.Width, 400)
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        PaddingBottom: =10
+                        PaddingLeft: =5
+                        PaddingRight: =5
+                        PaddingTop: =10
+                      Children:
+                        - ImageContainer31:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Center
+                              DropShadow: =DropShadow.None
+                              FillPortions: =1.5
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =5
+                              LayoutJustifyContent: =LayoutJustifyContent.End
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinWidth: =Container31.Width
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =Parent.Width
+                            Children:
+                              - Image31:
+                                  Control: Image@2.2.3
+                                  Properties:
+                                    BorderColor: =RGBA(0, 18, 107, 1)
+                                    Image: =
+                                    ImagePosition: =ImagePosition.Fill
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    RadiusBottomLeft: =90
+                                    RadiusBottomRight: =90
+                                    RadiusTopLeft: =90
+                                    RadiusTopRight: =90
+                              - Icon8:
+                                  Control: Icon@0.0.7
+                                  Properties:
+                                    Icon: ="Calendar"
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                        - TitleContainer31:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Center
+                              DropShadow: =DropShadow.None
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinWidth: =Container31.Width
+                              PaddingTop: =20
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =Parent.Width
+                            Children:
+                              - FeatureItemButton31:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    AccessibleLabel: ="Featured item button"
+                                    Appearance: ='ButtonCanvas.Appearance'.Transparent
+                                    FontSize: =20
+                                    FontWeight: =FontWeight.Bold
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinWidth: =Parent.Width
+                                    OnSelect: =Navigate(EmployeePlanningStatus,ScreenTransition.Fade)
+                                    Text: ="Plan Employee Status "
+                                    Width: =Parent.Width
+                              - DescriptionText31:
+                                  Control: Text@0.0.51
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    FillPortions: =1
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinWidth: =Parent.Width
+                                    Size: =16
+                                    Text: ="Propose future changes for your team – promotions, transfers, resignations, and more – as part of the upcoming personnel plan"
+                                    VerticalAlign: =VerticalAlign.Top
+                                    Width: =Parent.Width
+                  - Container41:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        Fill: =RGBA(255, 255, 255, 1)
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =5
+                        LayoutJustifyContent: =LayoutJustifyContent.Center
+                        LayoutMaxHeight: =
+                        LayoutMaxWidth: =
+                        LayoutMinHeight: =300
+                        LayoutMinWidth: =If(HomeScreen.Size = ScreenSize.Small, Parent.Width, 400)
+                        LayoutOverflowY: =LayoutOverflow.Scroll
+                        PaddingBottom: =10
+                        PaddingLeft: =5
+                        PaddingRight: =5
+                        PaddingTop: =10
+                      Children:
+                        - ImageContainer41:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Center
+                              DropShadow: =DropShadow.None
+                              FillPortions: =1.5
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =5
+                              LayoutJustifyContent: =LayoutJustifyContent.End
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinWidth: =Container41.Width
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =Parent.Width
+                            Children:
+                              - Image41:
+                                  Control: Image@2.2.3
+                                  Properties:
+                                    BorderColor: =RGBA(0, 18, 107, 1)
+                                    Image: =
+                                    ImagePosition: =ImagePosition.Fill
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    RadiusBottomLeft: =90
+                                    RadiusBottomRight: =90
+                                    RadiusTopLeft: =90
+                                    RadiusTopRight: =90
+                              - Icon9:
+                                  Control: Icon@0.0.7
+                                  Properties:
+                                    Icon: ="PeopleAdd"
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                        - TitleContainer41:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Center
+                              DropShadow: =DropShadow.None
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutMaxHeight: =
+                              LayoutMaxWidth: =
+                              LayoutMinWidth: =Container41.Width
+                              PaddingTop: =20
+                              RadiusBottomLeft: =0
+                              RadiusBottomRight: =0
+                              RadiusTopLeft: =0
+                              RadiusTopRight: =0
+                              Width: =Parent.Width
+                            Children:
+                              - FeatureItemButton41:
+                                  Control: Button@0.0.45
+                                  Properties:
+                                    AccessibleLabel: =
+                                    Appearance: ='ButtonCanvas.Appearance'.Transparent
+                                    FontSize: =20
+                                    FontWeight: =FontWeight.Bold
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinWidth: =Parent.Width
+                                    OnSelect: =Navigate(PlanRecruitmentScreen,ScreenTransition.Fade)
+                                    Text: ="Plan Recruitment"
+                                    Width: =Parent.Width
+                              - DescriptionText41:
+                                  Control: Text@0.0.51
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    FillPortions: =1
+                                    LayoutMaxHeight: =
+                                    LayoutMaxWidth: =
+                                    LayoutMinWidth: =Parent.Width
+                                    Size: =16
+                                    Text: ="Propose future Recruitment for your team "
+                                    VerticalAlign: =VerticalAlign.Top
+                                    Width: =Parent.Width

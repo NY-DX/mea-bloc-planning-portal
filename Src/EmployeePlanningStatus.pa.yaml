@@ -1,0 +1,2647 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  EmployeePlanningStatus:
+    Properties:
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnVisible: |-
+        =If(
+            IsBlank(varSelectedEmployee),
+            Set(
+                varSelectedEmployee,
+                First(galPlanningEmployees.AllItems)
+            )
+        );
+    Children:
+      - txtSearchPlanning:
+          Control: TextInput@0.0.54
+          Properties:
+            Height: =34
+            Placeholder: ="Search employee"
+            Width: =286
+            X: =24
+            Y: =35
+      - galPlanningEmployees:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Items: =colManagerEmployees
+            OnSelect: |-
+              =Set(varSelectedEmployee, ThisItem);
+              Set(varTriggerRefresh, !varTriggerRefresh);
+              UpdateContext({
+                  varCurrentYearRecord: LookUp(
+                      EmployeeStatusTable,
+                      Employee.Id = ThisItem.ID And 
+                      Date = Date(Value(radPlanningDate.Selected.Value), 4, 1)
+                  ),
+                  varPromotedGrade: Blank()
+              });
+
+              UpdateContext({
+                  varHQToggleChanged: false,
+                  varHQToggleState: If(!IsBlank(varCurrentYearRecord), varCurrentYearRecord.HQEmployment, false)
+              });
+
+              // --- NEW: Mobility detection ---
+              Set(varManagerDepts, 
+                  Filter(
+                      DepartmentTable,
+                      Lower(GeneralManager.Email) = Lower(varCurrentUserEmail)
+                  ).AddressCode
+              );
+
+              Set(varIsOnMobility,
+                  !(ThisItem.AddressCode.Value in varManagerDepts) &&
+                  !IsEmpty(
+                      Filter(
+                          EmployeeStatusTable,
+                          Employee.Value = ThisItem.'LastName ' &&
+                          MobilityAC.Value in varManagerDepts
+                      )
+                  )
+              );
+            TemplateFill: |-
+              =If(
+                  ThisItem.ID = varSelectedEmployee.ID,
+                  RGBA(0, 120, 215, 0.1),  // Light blue highlight
+                  RGBA(0, 0, 0, 0)  // Transparent
+              )
+            Width: =279
+            X: =24
+            Y: =116
+          Children:
+            - Title3:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =Self.Size * 1.8
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =14
+                  Text: |+
+                    =ThisItem.'FirstName ' & " " & ThisItem.'MiddleName ' & " " & ThisItem.'LastName '
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =Parent.TemplateWidth - 86
+                  X: =16
+                  Y: =(Parent.TemplateHeight - (Self.Size*1.8 + Subtitle2.Size*1.8 + 2 + Body1.Size*1.8)) / 2
+            - Subtitle2:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =Self.Size * 1.8
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =12
+                  Text: =ThisItem.AddressCode.Value
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =Title3.Width
+                  X: =Title3.X
+                  Y: =Title3.Y + Title3.Height
+            - Body1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =If(ThisItem.IsSelected, FontWeight.Semibold, FontWeight.Normal)
+                  Height: =Self.Size * 1.8
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =12
+                  Text: =
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =Title3.Width
+                  X: =Title3.X
+                  Y: =Subtitle2.Y + Subtitle2.Height
+            - NextArrow3:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  AccessibleLabel: =Self.Tooltip
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Color: =RGBA(166, 166, 166, 1)
+                  Height: =50
+                  Icon: =Icon.ChevronRight
+                  OnSelect: =Select(Parent)
+                  PaddingBottom: =16
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =16
+                  Tooltip: ="View item details"
+                  Width: =50
+                  X: =Parent.TemplateWidth - Self.Width - 12
+                  Y: =(Parent.TemplateHeight / 2) - (Self.Height / 2)
+            - Separator3:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Fill: =RGBA(255, 255, 255, 1)
+                  Height: =8
+                  OnSelect: =Select(Parent)
+                  Width: =Parent.TemplateWidth
+                  Y: =Parent.TemplateHeight - Self.Height
+            - Rectangle3:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Fill: =RGBA(0, 18, 107, 1)
+                  Height: =Parent.TemplateHeight - Separator3.Height
+                  OnSelect: =Select(Parent)
+                  Visible: =ThisItem.IsSelected
+                  Width: =4
+            - TextCanvas9:
+                Control: Text@0.0.51
+                Properties:
+                  Text: =ThisItem.'Employee ID'
+                  X: =183
+                  Y: =79
+      - frmPlanningForm:
+          Control: Form@2.4.4
+          Layout: Vertical
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            DataSource: =EmployeeStatusTable
+            DefaultMode: |-
+              =// Form DefaultMode property
+              If(
+                  IsBlank(
+                      LookUp(
+                          colEmployeeStatus,
+                          Employee.Id = varSelectedEmployee.ID &&
+                          Date = Date(Year(radPlanningDate.Selected.Value), 4, 1)
+                      )
+                  ),
+                  FormMode.New,
+                  FormMode.Edit  // Always Edit - we'll lock fields separately
+              )
+            Height: =595
+            Item: |-
+              =LookUp(
+                  colEmployeeStatus,
+                  Employee.Id = galPlanningEmployees.Selected.ID &&
+                  Date = Date(Value(radPlanningDate.Selected.Value), 4, 1)
+              )
+            Width: =1048
+            X: =310
+            Y: =159
+          Children:
+            - Employee_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ComboBoxEdit
+                IsLocked: true
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="EmployeeId"
+                  Default: =ThisItem.Employee
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Employee)
+                  Required: =false
+                  Update: =DataCardValue5.Selected
+                  Visible: =false
+                  Width: =349
+                  X: =0
+                  Y: =0
+                Children:
+                  - DataCardKey5:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - DataCardValue5:
+                      Control: ComboBox@0.0.51
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DefaultSelectedItems: =[Parent.Default]
+                        DisplayMode: =Parent.DisplayMode
+                        Items: =Choices([@EmployeeStatusTable].Employee)
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey5.Y + DataCardKey5.Height + 4
+                  - ErrorMessage5:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardValue5.Y + DataCardValue5.Height
+                  - StarVisible5:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =20
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey5.Y
+            - EmploymentType_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ComboBoxEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="BizCorp"
+                  Default: =ThisItem.EmploymentType
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,EmploymentType)
+                  Required: =false
+                  Update: =drpEmpType.Selected
+                  Width: =349
+                  X: =1
+                  Y: =0
+                Children:
+                  - DataCardKey8:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: ="Biz/Corp"
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - drpEmpType:
+                      Control: ComboBox@0.0.51
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DefaultSelectedItems: |-
+                          =If(
+                              !IsBlank(Parent.Default),
+                              Parent.Default,  // Use existing record data when available
+                              // When creating new record, look at previous year
+                              With(
+                                  {
+                                      prevRecord: LookUp(
+                                          EmployeeStatusTable,
+                                          Employee.Id = galPlanningEmployees.Selected.ID And 
+                                          Date = Date(Value(radPlanningDate.Selected.Value) - 1, 4, 1)
+                                      )
+                                  },
+                                  If(
+                                      !IsBlank(prevRecord.EmploymentType.Value),
+                                      {Value: prevRecord.EmploymentType.Value},
+                                      Blank()
+                                  )
+                              )
+                          )
+                        DisplayMode: =Parent.DisplayMode
+                        IsSearchable: =false
+                        Items: =Choices([@EmployeeStatusTable].EmploymentType)
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey8.Y + DataCardKey8.Height + 4
+                  - ErrorMessage8:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =drpEmpType.Y + drpEmpType.Height
+                  - StarVisible8:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =20
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey8.Y
+            - GlobalGrade_DataCard3:
+                Control: TypedDataCard@1.0.7
+                Variant: ComboBoxView
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="GlobalGrade"
+                  Default: =ThisItem.GlobalGrade
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,GlobalGrade)
+                  Height: =69
+                  Required: =false
+                  Width: =349
+                  X: =2
+                  Y: =0
+                Children:
+                  - DataCardKey7:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: ="Global Grade"
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - DataCardValue8:
+                      Control: ComboBox@0.0.51
+                      MetadataKey: FieldValue
+                      Properties:
+                        DefaultSelectedItems: |-
+                          ={Value: Switch(
+                              // Check the selected Regional Grade dropdown value first, then fall back to stored value
+                              Coalesce(
+                                  DataCardValue1.Selected.Value,
+                                  varBaseRegionalGrade,
+                                  varStoredRegionalGrade
+                              ),
+                              "(MEA) E", "N/A",
+                              "(MEA) G1", "GG5",
+                              "(MEA) G1+", "GG5",
+                              "(MEA) G2", "GG5",
+                              "(MEA) G2+", "GG5",
+                              "(MEA) G3", "GG4",
+                              "(MEA) G3+", "GG4",
+                              "(MEA) G4M / G4P", "GG3",
+                              "(MEA) M2/G5", "GG2",
+                              "(MEA) M2+/G6", "GG2",
+                              "(MEA) M1/G7", "GG1",
+                              "GG5"  // Default fallback
+                          )}
+                        DisplayMode: =Parent.DisplayMode
+                        Items: =Choices([@EmployeeStatusTable].GlobalGrade)
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey7.Y + DataCardKey7.Height + 4
+            - RegionalGrade_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ComboBoxEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="RegionalGrade"
+                  Default: =ThisItem.RegionalGrade
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,RegionalGrade)
+                  Height: =60
+                  Required: =false
+                  Update: =DataCardValue1.Selected
+                  Width: =349
+                  X: =0
+                  Y: =1
+                Children:
+                  - DataCardKey1:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - DataCardValue1:
+                      Control: ComboBox@0.0.51
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DefaultSelectedItems: |-
+                          =If(
+                              !IsBlank(varPromotedGrade),
+                              {Value: varPromotedGrade},  // Use the toggled grade
+                              If(
+                                  !IsBlank(Parent.Default),
+                                  Parent.Default,  // Use saved SharePoint value
+                                  With(
+                                      {
+                                          prevRecord: LookUp(
+                                              EmployeeStatusTable,
+                                              Employee.Id = galPlanningEmployees.Selected.ID And 
+                                              Date = Date(Value(radPlanningDate.Selected.Value) - 1, 4, 1)
+                                          )
+                                      },
+                                      If(
+                                          !IsBlank(prevRecord.RegionalGrade.Value), 
+                                          {Value: prevRecord.RegionalGrade.Value}, 
+                                          Blank()
+                                      )
+                                  )
+                              )
+                          )
+                        DisplayMode: =Parent.DisplayMode
+                        Items: =Choices([@EmployeeStatusTable].RegionalGrade)
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey1.Y + DataCardKey1.Height + 4
+                  - ErrorMessage1:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardValue1.Y + DataCardValue1.Height
+                  - StarVisible1:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =20
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey1.Y
+            - Division_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ComboBoxEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Division"
+                  Default: =ThisItem.Division
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Division)
+                  Height: =69
+                  Required: =true
+                  Update: =DataCardValue7.Selected
+                  Width: =349
+                  X: =1
+                  Y: =1
+                Children:
+                  - DataCardKey19:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: ="HR Code"
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - DataCardValue7:
+                      Control: ComboBox@0.0.51
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DefaultSelectedItems: |-
+                          =If(
+                              !IsBlank(Parent.Default),
+                              Parent.Default,
+                              With(
+                                  {
+                                      prevRecord: LookUp(
+                                          EmployeeStatusTable,
+                                          Employee.Id = galPlanningEmployees.Selected.ID And 
+                                          Date = Date(Value(radPlanningDate.Selected.Value) - 1, 4, 1)
+                                      )
+                                  },
+                                  If(!IsBlank(prevRecord.Division.Value), {Value: prevRecord.Division.Value}, Blank())
+                              )
+                          )
+                        DisplayMode: =Parent.DisplayMode
+                        Items: =Choices([@EmployeeStatusTable].Division)
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey19.Y + DataCardKey19.Height + 4
+                  - ErrorMessage19:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardValue7.Y + DataCardValue7.Height
+                  - StarVisible19:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =20
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey19.Y
+            - AddressCode_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ComboBoxEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="AddressCode"
+                  Default: =ThisItem.AddressCode
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,AddressCode)
+                  Required: =false
+                  Update: =drpAddressCode.Selected
+                  Width: =349
+                  X: =2
+                  Y: =1
+                Children:
+                  - DataCardKey15:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: ="Address Code"
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =30
+                        Y: =16
+                  - ErrorMessage15:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =drpAddressCode.Y + drpAddressCode.Height
+                  - StarVisible15:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =20
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey15.Y
+                  - drpAddressCode:
+                      Control: ComboBox@0.0.51
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DefaultSelectedItems: |-
+                          =If(
+                              !IsBlank(Parent.Default),
+                              Parent.Default,
+                              With(
+                                  {
+                                      prevRecord: LookUp(
+                                          EmployeeStatusTable,
+                                          Employee.Id = galPlanningEmployees.Selected.ID And 
+                                          Date = Date(Value(radPlanningDate.Selected.Value) - 1, 4, 1)
+                                      )
+                                  },
+                                  If(!IsBlank(prevRecord.AddressCode.Value), {Value: prevRecord.AddressCode.Value}, Blank())
+                              )
+                          )
+                        Height: =29
+                        Items: =Choices([@EmployeeStatusTable].AddressCode)
+                        Width: =238
+                        X: =24
+                        Y: =38
+                      Children:
+                        - Value1:
+                            Control: ComboBoxDataField@1.5.0
+                            Variant: textualColumn
+                            IsLocked: true
+                            Properties:
+                              FieldDisplayName: ="Value"
+                              FieldName: ="Value"
+                              FieldType: ="s"
+                              Order: =1
+            - HQEmployment_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ToggleEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="HQEmployment"
+                  Default: |-
+                    =If(
+                        !IsBlank(varCurrentYearRecord),
+                        varCurrentYearRecord.HQEmployment,  // Use existing record data when available
+                        // When creating new record, look at previous year
+                        With(
+                            {
+                                prevRecord: LookUp(
+                                    EmployeeStatusTable,
+                                    Employee.Id = galPlanningEmployees.Selected.ID And 
+                                    Date = Date(Value(radPlanningDate.Selected.Value) - 1, 4, 1)
+                                )
+                            },
+                            If(
+                                !IsBlank(prevRecord),
+                                prevRecord.HQEmployment,
+                                false  // Default to false if no previous record exists
+                            )
+                        )
+                    )
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,HQEmployment)
+                  Required: =false
+                  Update: =tglHQ.Checked
+                  Width: =349
+                  X: =0
+                  Y: =2
+                Children:
+                  - DataCardKey10:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: ="HQ Employment"
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - tglHQ:
+                      Control: Toggle@1.1.5
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                        Checked: =Parent.Default
+                        DisplayMode: =Parent.DisplayMode
+                        Height: =32
+                        Label: =""
+                        OnCheck: |-
+                          =UpdateContext({
+                              varHQToggleChanged: true,
+                              varHQToggleState: true
+                          })
+                        OnUncheck: |-
+                          =UpdateContext({
+                              varHQToggleChanged: true,
+                              varHQToggleState: false
+                          })
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey10.Y + DataCardKey10.Height + 4
+                  - ErrorMessage10:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =tglHQ.Y + tglHQ.Height
+                  - StarVisible10:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey10.Y
+            - Promotion_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ToggleEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Promotion"
+                  Default: |-
+                    =If(
+                        !IsBlank(varCurrentYearRecord),
+                        varCurrentYearRecord.Promotion,
+                        false
+                    )
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Promotion)
+                  Required: =false
+                  Update: =tglPromotion.Checked
+                  Width: =349
+                  X: =1
+                  Y: =2
+                Children:
+                  - DataCardKey11:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - tglPromotion:
+                      Control: Toggle@1.1.5
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                        Checked: =Parent.Default
+                        DisplayMode: =Parent.DisplayMode
+                        Height: =32
+                        Label: =""
+                        OnCheck: |-
+                          =UpdateContext({
+                              varPromotedGrade: Switch(
+                                  DataCardValue1.Selected.Value,
+                                  "(MEA) G1", "(MEA) G1+",
+                                  "(MEA) G1+", "(MEA) G2",
+                                  "(MEA) G2", "(MEA) G2+",
+                                  "(MEA) G2+", "(MEA) G3",
+                                  "(MEA) G3", "(MEA) G3+",
+                                  "(MEA) G3+", "(MEA) G4M / G4P",
+                                  "(MEA) G4M / G4P", "(MEA) M2/G5",
+                                  "(MEA) M2/G5", "(MEA) M2+/G6",
+                                  "(MEA) M2+/G6", "(MEA) M1/G7",
+                                  DataCardValue1.Selected.Value
+                              )
+                          });
+                          Reset(DataCardValue1)
+                        OnUncheck: |-
+                          =UpdateContext({
+                              varPromotedGrade: Switch(
+                                  DataCardValue1.Selected.Value,
+                                  "(MEA) M1/G7", "(MEA) M2+/G6",
+                                  "(MEA) M2+/G6", "(MEA) M2/G5",
+                                  "(MEA) M2/G5", "(MEA) G4M / G4P",
+                                  "(MEA) G4M / G4P", "(MEA) G3+",
+                                  "(MEA) G3+", "(MEA) G3",
+                                  "(MEA) G3", "(MEA) G2+",
+                                  "(MEA) G2+", "(MEA) G2",
+                                  "(MEA) G2", "(MEA) G1+",
+                                  "(MEA) G1+", "(MEA) G1",
+                                  DataCardValue1.Selected.Value
+                              )
+                          });
+                          Reset(DataCardValue1)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey11.Y + DataCardKey11.Height + 4
+                  - ErrorMessage11:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =tglPromotion.Y + tglPromotion.Height
+                  - StarVisible11:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey11.Y
+            - Resignation_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ToggleEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Resignation"
+                  Default: |-
+                    =If(
+                        !IsBlank(varCurrentYearRecord),
+                        varCurrentYearRecord.Resignation,
+                        false
+                    )
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Resignation)
+                  Required: =false
+                  Update: =tglResignation.Checked
+                  Width: =349
+                  X: =2
+                  Y: =2
+                Children:
+                  - DataCardKey13:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - tglResignation:
+                      Control: Toggle@1.1.5
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                        Checked: =Parent.Default
+                        DisplayMode: =Parent.DisplayMode
+                        Height: =32
+                        Label: =""
+                        OnCheck: =Set(varResignationYear, Value(radPlanningDate.Selected.Value))
+                        OnUncheck: =Set(varResignationYear, Blank())
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey13.Y + DataCardKey13.Height + 4
+                  - ErrorMessage13:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =tglResignation.Y + tglResignation.Height
+                  - StarVisible13:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey13.Y
+            - Mobility_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ToggleEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Mobility"
+                  Default: |-
+                    =If(
+                        !IsBlank(varCurrentYearRecord),
+                        varCurrentYearRecord.Mobility,  // Use existing record data when available
+                        // When creating new record, look at previous year
+                        With(
+                            {
+                                prevRecord: LookUp(
+                                    EmployeeStatusTable,
+                                    Employee.Id = galPlanningEmployees.Selected.ID And 
+                                    Date = Date(Value(radPlanningDate.Selected.Value) - 1, 4, 1)
+                                )
+                            },
+                            If(
+                                !IsBlank(prevRecord),
+                                prevRecord.Mobility,
+                                false  // Default to false if no previous record exists
+                            )
+                        )
+                    )
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Mobility)
+                  Required: =false
+                  Update: =tglMobility.Checked
+                  Width: =349
+                  X: =0
+                  Y: =3
+                Children:
+                  - DataCardKey12:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: |-
+                          ="Mobility/Transfer
+                          "
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - tglMobility:
+                      Control: Toggle@1.1.5
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                        Checked: =Parent.Default
+                        DisplayMode: =Parent.DisplayMode
+                        Height: =32
+                        Label: =""
+                        OnCheck: =Set(varMobilityYear, Year(radPlanningDate.Selected.Value))
+                        OnUncheck: =Set(varMobilityYear, Blank());
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey12.Y + DataCardKey12.Height + 4
+                  - ErrorMessage12:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =tglMobility.Y + tglMobility.Height
+                  - StarVisible12:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey12.Y
+            - Succession_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ToggleEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Succession"
+                  Default: |-
+                    =If(
+                        !IsBlank(varCurrentYearRecord),
+                        varCurrentYearRecord.Succession,
+                        false
+                    )
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Succession)
+                  Required: =false
+                  Update: =tglSuccession.Checked
+                  Width: =349
+                  X: =1
+                  Y: =3
+                Children:
+                  - DataCardKey17:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - tglSuccession:
+                      Control: Toggle@1.1.5
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                        Checked: =Parent.Default
+                        DisplayMode: =Parent.DisplayMode
+                        Height: =32
+                        Label: =""
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey17.Y + DataCardKey17.Height + 4
+                  - ErrorMessage17:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =tglSuccession.Y + tglSuccession.Height
+                  - StarVisible17:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey17.Y
+            - MobilityRegion_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ComboBoxEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="MobilityRegion"
+                  Default: =ThisItem.MobilityRegion
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: ="Mobility Region"
+                  Required: =false
+                  Update: |-
+                    =If(
+                        tglMobility.Checked,
+                        DataCardValue10.Selected,
+                        {
+                            '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                            Id: -1,
+                            Value: ""
+                        }
+                    )
+                  Visible: |-
+                    =// In the Visible property of MobilityRegion_DataCard1
+                    tglMobility.Checked
+                  Width: =349
+                  X: =2
+                  Y: =3
+                Children:
+                  - DataCardKey9:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =4
+                  - DataCardValue10:
+                      Control: ComboBox@0.0.51
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DefaultSelectedItems: |-
+                          =If(
+                              !tglMobility.Checked,
+                              Blank(),  // Toggle is OFF - always blank
+                              If(
+                                  !IsBlank(Parent.Default),
+                                  Parent.Default,  // Use existing record data when available
+                                  With(
+                                      {
+                                          prevRecord: LookUp(
+                                              EmployeeStatusTable,
+                                              Employee.Id = galPlanningEmployees.Selected.ID And 
+                                              Date = Date(Value(radPlanningDate.Selected.Value) - 1, 4, 1)
+                                          )
+                                      },
+                                      If(
+                                          !IsBlank(prevRecord) && !IsBlank(prevRecord.MobilityRegion),
+                                          prevRecord.MobilityRegion,
+                                          Blank()
+                                      )
+                                  )
+                              )
+                          )
+                        DisplayMode: =Parent.DisplayMode
+                        Items: =Choices([@EmployeeStatusTable].MobilityRegion)
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey9.Y + DataCardKey9.Height + 4
+                  - ErrorMessage9:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardValue10.Y + DataCardValue10.Height
+                  - StarVisible9:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =20
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey9.Y
+            - MobilityAC_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ComboBoxEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="MobilityAC"
+                  Default: =ThisItem.MobilityAC
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,MobilityAC)
+                  Required: =false
+                  Update: |-
+                    =If(
+                        tglMobility.Checked,
+                        DataCardValue22.Selected,
+                        {
+                            '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                            Id: -1,
+                            Value: ""
+                        }
+                    )
+                  Visible: =tglMobility.Checked
+                  Width: =349
+                  X: =0
+                  Y: =4
+                Children:
+                  - DataCardKey36:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: |+
+                          ="Mobility Address Code"
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - DataCardValue22:
+                      Control: ComboBox@0.0.51
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DefaultSelectedItems: |-
+                          =If(
+                              !tglMobility.Checked,
+                              Blank(),  // Toggle OFF - always blank
+                              If(
+                                  !IsBlank(Parent.Default),
+                                  Parent.Default,
+                                  With(
+                                      {
+                                          prevRecord: LookUp(
+                                              EmployeeStatusTable,
+                                              Employee.Id = galPlanningEmployees.Selected.ID And 
+                                              Date = Date(Value(radPlanningDate.Selected.Value) - 1, 4, 1)
+                                          )
+                                      },
+                                      If(
+                                          !IsBlank(prevRecord) && !IsBlank(prevRecord.MobilityAC),
+                                          prevRecord.MobilityAC,
+                                          Blank()
+                                      )
+                                  )
+                              )
+                          )
+                        DisplayMode: =Parent.DisplayMode
+                        Items: =Choices([@EmployeeStatusTable].MobilityAC)
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey36.Y + DataCardKey36.Height + 4
+                      Children:
+                        - Value2:
+                            Control: ComboBoxDataField@1.5.0
+                            Variant: textualColumn
+                            IsLocked: true
+                            Properties:
+                              FieldDisplayName: ="Value"
+                              FieldName: ="Value"
+                              FieldType: ="s"
+                              Order: =1
+                  - ErrorMessage35:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardValue22.Y + DataCardValue22.Height
+                  - StarVisible35:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =20
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey36.Y
+            - Title_DataCard2:
+                Control: TypedDataCard@1.0.7
+                Variant: TextualEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Title"
+                  Default: =ThisItem.Title
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Title)
+                  MaxLength: =DataSourceInfo([@EmployeeStatusTable], DataSourceInfo.MaxLength, Title)
+                  Required: =true
+                  Update: =DataCardValue6.Value
+                  Visible: =false
+                  Width: =349
+                  X: =340
+                  Y: =4
+                Children:
+                  - DataCardKey6:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - DataCardValue6:
+                      Control: TextInput@0.0.54
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DisplayMode: =Parent.DisplayMode
+                        Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Value: =Parent.Default
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey6.Y + DataCardKey6.Height + 4
+                  - ErrorMessage6:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardValue6.Y + DataCardValue6.Height
+                  - StarVisible6:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey6.Y
+            - Remark_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: TextualEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Remark"
+                  Default: =ThisItem.Remark
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Remark)
+                  Height: =92
+                  MaxLength: =DataSourceInfo([@EmployeeStatusTable], DataSourceInfo.MaxLength, Remark)
+                  Required: =false
+                  Update: =txtRemarks.Value
+                  Width: =1047
+                  X: =0
+                  Y: =5
+                Children:
+                  - DataCardKey14:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - txtRemarks:
+                      Control: TextInput@0.0.54
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DisplayMode: =Parent.DisplayMode
+                        Mode: ="'TextInputCanvas.Mode'.TextInputModeSingleLine"
+                        Required: =Parent.Required
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Value: =Parent.Default
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey14.Y + DataCardKey14.Height + 4
+                  - ErrorMessage14:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =txtRemarks.Y + txtRemarks.Height
+                  - StarVisible14:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey14.Y
+            - Last Updated_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: DateEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="LastUpdated"
+                  Default: =ThisItem.'Last Updated'
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,'Last Updated')
+                  Required: =false
+                  Update: =DataCardValue13.SelectedDate
+                  Width: =349
+                  X: =0
+                  Y: =6
+                Children:
+                  - DataCardKey25:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =Parent.Width - 48
+                        Wrap: =false
+                        X: =20
+                        Y: =5
+                  - DataCardValue13:
+                      Control: DatePicker@0.0.46
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =Parent.DisplayName
+                        DisplayMode: =Parent.DisplayMode
+                        EndDate: =Date(Year(Today())+100, 12, 31)
+                        SelectedDate: =Parent.Default
+                        StartDate: =Date(1900, 1, 1)
+                        ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardKey25.Y + DataCardKey25.Height + 4
+                  - ErrorMessage7:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardValue13.Y + DataCardValue13.Height
+                  - StarVisible7:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey25.Y
+            - FinalSubmission_DataCard1:
+                Control: TypedDataCard@1.0.7
+                Variant: ToggleEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="FinalSubmission"
+                  Default: =ThisItem.FinalSubmission
+                  DisplayMode: |-
+                    =// On each DataCard's DisplayMode property
+                    If(
+                        varIsOnMobility && varSelectedEmployee.AddressCode.Value <> "Outside",
+                        DisplayMode.View,  // Locked for mobility employees
+                        Parent.DisplayMode  // Otherwise inherit from form
+                    )
+                  DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,FinalSubmission)
+                  Height: =76
+                  Required: =false
+                  Update: =DataCardValue23.Checked
+                  Width: =349
+                  X: =1
+                  Y: =6
+                Children:
+                  - DataCardKey37:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldName
+                      Properties:
+                        Height: =30
+                        Size: =18
+                        Text: ="Final Submission"
+                        Weight: ='TextCanvas.Weight'.Semibold
+                        Width: =301
+                        Wrap: =false
+                        X: =24
+                        Y: =10
+                  - DataCardValue23:
+                      Control: Toggle@1.1.5
+                      MetadataKey: FieldValue
+                      Properties:
+                        AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                        Checked: =Parent.Default
+                        DisplayMode: =Parent.DisplayMode
+                        Height: =36
+                        Label: =""
+                        Width: =301
+                        X: =24
+                        Y: =40
+                  - ErrorMessage36:
+                      Control: Text@0.0.51
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        Height: =30
+                        Text: =Parent.Error
+                        Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =Parent.Width - 48
+                        X: =24
+                        Y: =DataCardValue23.Y + DataCardValue23.Height
+                  - StarVisible36:
+                      Control: Text@0.0.51
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: ='TextCanvas.Align'.Center
+                        Height: =30
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Y: =DataCardKey37.Y
+      - ButtonCanvas5:
+          Control: Button@0.0.45
+          Properties:
+            DisplayMode: "=If(\r\n    // Disable if required fields are blank\r\n    IsBlank(drpEmpType.Selected.Value) || \r\n    IsBlank(DataCardValue1.Selected.Value) ||\r\n    IsBlank(DataCardValue7.Selected.Value) ||\r\n    IsBlank(drpAddressCode.Selected.Value) ||\r\n    // OR if employee is on mobility AND address is NOT \"Outside\"\r\n    (varIsOnMobility && varSelectedEmployee.AddressCode.Value <> \"Outside\"),\r\n    \r\n    DisplayMode.Disabled,\r\n    DisplayMode.Edit\r\n)"
+            Height: =43
+            OnSelect: "=Set(\n    varExistingRecord,\n    LookUp(\n        colEmployeeStatus,\n        Employee.Id = varSelectedEmployee.ID &&\n        Date = Date(Year(radPlanningDate.Selected.Value), 4, 1)\n    )\n);\n\n// \U0001F539 Determine correct Biz/Corp based on HR Code\nSet(\n    varExpectedBizCorp,\n    Switch(\n        DataCardValue7.Selected.Value,\n        // Business HR Codes\n        \"Iron & Steel Products\", \"Business\",\n        \"Mineral & Metal Resources\", \"Business\",\n        \"Energy I\", \"Business\",\n        \"Energy II\", \"Business\",\n        \"Energy Solution\", \"Business\",\n        \"Infrastructure Projects\", \"Business\",\n        \"Mobility I\", \"Business\",\n        \"Mobility II\", \"Business\",\n        \"Basic Materials\", \"Business\",\n        \"Performance Materials\", \"Business\",\n        \"Nutrition & Agriculture\", \"Business\",\n        \"Food\", \"Business\",\n        \"Retail\", \"Business\",\n        \"Wellness\", \"Business\",\n        \"IT & Communication\", \"Business\",\n        \"Corporate Development\", \"Business\",\n        \n        // GCS HR Codes\n        \"DX\", \"GCS\",\n        \"CFO\", \"GCS\",\n        \"Legal\", \"GCS\",\n        \n        // Non-GCS HR Codes\n        \"Human Resources & General Affairs\", \"Non-GCS\",\n        \"Regional CSO\", \"Non-GCS\",\n        \n        // Default\n        \"\"\n    )\n);\n\n// \U0001F539 Check for discrepancy\nSet(\n    varHasDiscrepancy,\n    !IsBlank(varExpectedBizCorp) && \n    !IsBlank(drpEmpType.Selected.Value) &&\n    varExpectedBizCorp <> drpEmpType.Selected.Value\n);\n\n// Save current record first\nIf(\n    IsBlank(varExistingRecord),\n    // \U0001F539 INSERT new record\n    Patch(\n        EmployeeStatusTable,\n        Defaults(EmployeeStatusTable),\n        {\n            Employee: {\n                '@odata.type': \"#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference\",\n                Id: varSelectedEmployee.ID,\n                Value: varSelectedEmployee.'FirstName ' & \" \" & varSelectedEmployee.'LastName '\n            },\n            Date: Date(Year(radPlanningDate.Selected.Value), 4, 1),\n            Title: GUID(),\n            GlobalGrade: {Value: DataCardValue8.Selected.Value},\n            RegionalGrade: {Value: DataCardValue1.Selected.Value},\n            Division: {Value: DataCardValue7.Selected.Value},\n            HQEmployment: tglHQ.Checked,\n            EmploymentType: {Value: drpEmpType.Selected.Value},\n            Promotion: tglPromotion.Checked,\n            Mobility: tglMobility.Checked,\n            MobilityRegion: If(\n                tglMobility.Checked,\n                {Value: DataCardValue10.Selected.Value},\n                {\n                    '@odata.type': \"#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference\",\n                    Id: -1,\n                    Value: \"\"\n                }\n            ),\n            MobilityAC: If(\n                tglMobility.Checked,\n                {\n                    '@odata.type': \"#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference\",\n                    Id: DataCardValue22.Selected.Id,\n                    Value: DataCardValue22.Selected.Value\n                },\n                {\n                    '@odata.type': \"#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference\",\n                    Id: -1,\n                    Value: \"\"\n                }\n            ),\n            Resignation: tglResignation.Checked,\n            Succession: tglSuccession.Checked,\n            AddressCode: drpAddressCode.Selected,\n            Remark: txtRemarks.Value,\n            'Last Updated': Now(),\n            FinalSubmission: DataCardValue23.Checked\n        }\n    ),\n    \n    // \U0001F504 UPDATE existing record\n    Patch(\n        EmployeeStatusTable,\n        varExistingRecord,\n        {\n            'Last Updated': Now(),\n            GlobalGrade: {Value: DataCardValue8.Selected.Value},\n            RegionalGrade: {Value: DataCardValue1.Selected.Value},\n            Division: {Value: DataCardValue7.Selected.Value},\n            HQEmployment: tglHQ.Checked,\n            EmploymentType: {Value: drpEmpType.Selected.Value},\n            Promotion: tglPromotion.Checked,\n            Mobility: tglMobility.Checked,\n            MobilityRegion: If(\n                tglMobility.Checked,\n                {Value: DataCardValue10.Selected.Value},\n                {\n                    '@odata.type': \"#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference\",\n                    Id: -1,\n                    Value: \"\"\n                }\n            ),\n            MobilityAC: If(\n                tglMobility.Checked,\n                {\n                    '@odata.type': \"#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference\",\n                    Id: DataCardValue22.Selected.Id,\n                    Value: DataCardValue22.Selected.Value\n                },\n                {\n                    '@odata.type': \"#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference\",\n                    Id: -1,\n                    Value: \"\"\n                }\n            ),\n            Resignation: tglResignation.Checked,\n            Succession: tglSuccession.Checked,\n            AddressCode: drpAddressCode.Selected,\n            Remark: txtRemarks.Value,\n            FinalSubmission: DataCardValue23.Checked\n        }\n    )\n);\n\n// \U0001F534 DELETE future records if Resignation is True\nIf(\n    tglResignation.Checked,\n    ForAll(\n        Filter(\n            EmployeeStatusTable,\n            Employee.Id = varSelectedEmployee.ID &&\n            Date > Date(Year(radPlanningDate.Selected.Value), 4, 1)\n        ),\n        Remove(EmployeeStatusTable, ThisRecord)\n    )\n);\n\n// ═══════════════════════════════════════════════════════════════\n// REFRESH STATUS COLLECTIONS AFTER SAVE (delegable)\n// ═══════════════════════════════════════════════════════════════\n\n// Refresh direct employee status records\nClear(colDirectStatus);\nForAll(\n    colDirectEmployees As emp,\n    Collect(\n        colDirectStatus,\n        Filter(EmployeeStatusTable, Employee.Id = emp.ID)\n    )\n);\n\n// Refresh mobility employee status records\nClear(colMobilityStatus);\nForAll(\n    colMobilityEmployees As mobEmp,\n    Collect(\n        colMobilityStatus,\n        Filter(EmployeeStatusTable, Employee.Id = mobEmp.ID)\n    )\n);\n\n// Recombine into main collection\nClearCollect(colEmployeeStatus, colDirectStatus);\nCollect(colEmployeeStatus, colMobilityStatus);\n\nResetForm(frmPlanningForm);\n\n// Refresh the current year record to show updated values\nSet(\n    varCurrentYearRecord,\n    LookUp(\n        colEmployeeStatus,\n        Employee.Id = varSelectedEmployee.ID &&\n        Date = Date(Year(radPlanningDate.Selected.Value), 4, 1)\n    )\n);\n\n// After successful save\nSet(varIsEditingResignation, false);\n\n// Update context variables with fresh data\nUpdateContext({\n    varStoredRegionalGrade: varCurrentYearRecord.RegionalGrade.Value,\n    varBaseRegionalGrade: varCurrentYearRecord.RegionalGrade.Value\n});\n\n// Reset the resignation UI state\nUpdateContext({varResignationActive: false});\n\n// TRIGGER THE GALLERY'S ONSELECT - This will load the data for the selected year\nSelect(galPlanningEmployees, galPlanningEmployees.Selected, Rectangle3);"
+            Text: ="Save"
+            Width: =108
+            X: =1239
+            Y: =693
+      - btnCancel:
+          Control: Button@0.0.45
+          Properties:
+            Height: =43
+            OnSelect: |+
+              =Navigate(HomeScreen)
+            Text: ="Main Menu"
+            Width: =106
+            X: =24
+            Y: =693
+      - radPlanningDate:
+          Control: Radio@0.0.25
+          Properties:
+            DefaultSelectedItems: |-
+              =First(
+                  ForAll(
+                     colPlanningDates,
+                      Text(DateValue, "yyyy")
+                 )
+              )
+            DisplayMode: |+
+              =DisplayMode.Edit
+
+            Height: =81
+            Items: |-
+              =ForAll(
+                  colPlanningDates,
+                  Text(DateValue, "yyyy")
+              )
+            Layout: ='RadioGroupCanvas.Layout'.HorizontalStacked
+            OnChange: |-
+              =
+              Set(varLastValidYear, Value(radPlanningDate.Selected.Value));
+
+              With(
+                  {
+                      recordCheck: LookUp(
+                          EmployeeStatusTable,
+                          Employee.Id = galPlanningEmployees.Selected.ID And 
+                          Date = Date(Value(radPlanningDate.Selected.Value), 4, 1)
+                      )
+                  },
+                  Set(varRecordExists, !IsBlank(recordCheck))
+              );
+
+              Select(galPlanningEmployees, galPlanningEmployees.Selected, Rectangle3);
+            RadioSize: =20
+            Width: =276
+            X: =363
+            Y: =35
+      - TextCanvas1:
+          Control: Text@0.0.51
+          Properties:
+            Height: =29
+            Size: =20
+            Text: ="Planning Date (Select one)"
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =276
+            X: =363
+            Y: =6
+      - TextCanvas2:
+          Control: Text@0.0.51
+          Properties:
+            BorderColor: |-
+              =If(
+                  IsBlank(
+                      LookUp(
+                          EmployeeStatusTable,
+                          Employee.Id = galPlanningEmployees.Selected.ID And
+                          Date = Date(Year(radPlanningDate.Selected.Value), 4, 1)
+                      )
+                  ),
+                  Color.OrangeRed,
+                  Color.Green
+              )
+            Height: =47
+            Size: =22
+            Text: |-
+              =If(
+                  IsBlank(
+                      LookUp(
+                          EmployeeStatusTable,
+                          Employee.Id = galPlanningEmployees.Selected.ID &&
+                          Date = Date(Year(radPlanningDate.Selected.Value), 4, 1)
+                      )
+                  ),
+                  "⚠️ No planning record exists for " & galPlanningEmployees.Selected.'LastName ' & " - " & radPlanningDate.Selected.Value,
+                  "✅ Viewing existing record for " & galPlanningEmployees.Selected.'LastName ' & " - " & radPlanningDate.Selected.Value
+              )
+            Width: =569
+            X: =329
+            Y: =117
+      - warningResigned:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(215, 58, 60, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =131
+            Size: =14
+            Text: |-
+              ="⚠️ Consecutive Years will be DELETED due to planned Resignation.
+              ⚠️ Does this position require a replacement?
+              If yes, please use the ‘Recruitment’ page to add new staff."
+            Visible: =!IsBlank(varResignationYear) && tglResignation.Checked
+            Width: =493
+            X: =335
+            Y: =605
+      - warningOutdated:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Text: |-
+              =If(
+                  IsBlank('Last Updated_DataCard1'.Default),
+                  "❌ No record exists",
+                  If(
+                      DateDiff(
+                          'Last Updated_DataCard1'.Default,
+                          Today(),
+                          TimeUnit.Months
+                      ) > 8,
+                      "⚠️ Outdated - Last updated " & 
+                      DateDiff(
+                          'Last Updated_DataCard1'.Default,
+                          Today(),
+                          TimeUnit.Months
+                      ) & " months ago",
+                      "✅ Up to date"
+                  )
+              )
+            Width: =215
+            X: =1012
+            Y: =691
+      - warningPromotion:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(215, 58, 60, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =107
+            Size: =14
+            Text: ="⚠️ Does this position require a successor?” if yes, please select the ‘’ Succession’’ and provide further information in ‘’ remark’’ section"
+            Visible: =tglPromotion.Checked
+            Width: =538
+            X: =828
+            Y: =605
+      - warningMobility:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(215, 58, 60, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =107
+            Size: =14
+            Text: ="⚠️ Does this position require a successor?” if yes, please select the ‘’ Succession’’ and provide further information in ‘’Remark’’ section."
+            Visible: =!IsBlank(varMobilityYear) && tglMobility.Checked
+            Width: =538
+            X: =828
+            Y: =516
+      - warningHR:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(215, 58, 60, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =107
+            Size: =14
+            Text: ="⚠️ Are you sure the HR code will be changed permanently, and has approval from both the current and new HR code owners been obtained?"
+            Visible: |-
+              =!IsBlank(
+                  LookUp(
+                      EmployeeStatusTable,
+                      Employee.Id = galPlanningEmployees.Selected.ID And 
+                      Date = Date(Year(radPlanningDate.Selected.Value), 4, 1)
+                  )
+              ) And
+              DataCardValue7.Selected.Value <> 
+              LookUp(
+                  EmployeeStatusTable,
+                  Employee.Id = galPlanningEmployees.Selected.ID And 
+                  Date = Date(Year(radPlanningDate.Selected.Value), 4, 1)
+              ).Division.Value And 
+              !IsBlank(DataCardValue7.Selected.Value)
+            Width: =548
+            X: =809
+            Y: =87
+      - Status:
+          Control: HtmlViewer@2.1.0
+          Properties:
+            Font: =Font.'Open Sans'
+            Height: =68
+            HtmlText: |-
+              =Concat(
+                  ForAll(
+                      colPlanningDates,
+                      With(
+                          {
+                              recordStatus: LookUp(
+                                  EmployeeStatusTable,
+                                  Employee.Id = varSelectedEmployee.ID && 
+                                  Year(Date) = Year(DateValue)
+                              )
+                          },
+                          "<div style='display:inline-block; text-align:center; margin:0 15px;'>" &
+                          "<div style='font-size:20px;'>" &
+                          If(
+                              IsBlank(recordStatus),
+                              "⚫",
+                              If(
+                                  DateDiff(recordStatus.'Last Updated', Today(), TimeUnit.Months) > 10,
+                                  "🔴",
+                                  "🟢"
+                              )
+                          ) &
+                          "</div><div style='font-size:12px;'>" & 
+                          Text(DateValue, "yyyy") & 
+                          "</div></div>"
+                      )
+                  ),
+                  Value
+              )
+            Width: =324
+            X: =915
+            Y: =35
+      - StatusLegend:
+          Control: HtmlViewer@2.1.0
+          Properties:
+            Font: =Font.'Open Sans'
+            Height: =41
+            HtmlText: |-
+              ="<div style='display: inline-flex; gap: 15px; padding: 5px 10px; background: #f0f0f0; border-radius: 4px; font-size: 12px;'>
+                  <span>🟢 Up to date</span>
+                  <span>🔴 Outdated</span>
+                  <span>⚫ No data</span>
+              </div>"
+            Width: =441
+            X: =925
+      - ButtonCanvas1:
+          Control: Button@0.0.45
+          Properties:
+            Height: =38
+            OnSelect: |-
+              =Set(
+                  varHistoricalRecord,
+                  LookUp(
+                      EmployeeStatusTable,
+                      Employee.Id = galPlanningEmployees.Selected.ID And 
+                      Date = Date(varFiscalYearBase, 4, 1)
+                  )
+              );
+              Set(varShowHistoricalModal, true)
+            Text: ="View " & (varFiscalYearBase) & " Data"
+            Width: =147
+            X: =758
+            Y: =41
+      - Container1:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =RGBA(0, 0, 0, 0.5)
+            Height: =657
+            Visible: =varShowHistoricalModal
+            Width: =548
+            X: =809
+            Y: =95
+          Children:
+            - Container2:
+                Control: GroupContainer@1.5.0
+                Variant: ManualLayout
+                Properties:
+                  Fill: =Color.White
+                  Height: =617
+                  Width: =515
+                  X: =20
+                  Y: =20
+                Children:
+                  - TextCanvas4:
+                      Control: Text@0.0.51
+                      Properties:
+                        Height: =59
+                        Size: =36
+                        Text: =galPlanningEmployees.Selected.'LastName ' & " - " & (varFiscalYearBase) & " Data"
+                        Width: =442
+                        X: =40
+                        Y: =15
+                  - ButtonCanvas4:
+                      Control: Button@0.0.45
+                      Properties:
+                        OnSelect: =Set(varShowHistoricalModal, false)
+                        Text: ="Close"
+                        X: =386
+                        Y: =561
+                  - Form2:
+                      Control: Form@2.4.4
+                      Layout: Vertical
+                      Properties:
+                        BorderColor: =RGBA(0, 18, 107, 1)
+                        DataSource: =EmployeeStatusTable
+                        DefaultMode: |-
+                          =If(
+                              IsBlank(
+                                  LookUp(
+                                      EmployeeStatusTable,
+                                      Employee.Id = galPlanningEmployees.Selected.ID And 
+                                      Date = Date(varFiscalYearBase, 4, 1)
+                                  )
+                              ),
+                              FormMode.New
+                          )
+                        Item: |-
+                          =LookUp(
+                              EmployeeStatusTable,
+                              Employee.Id = galPlanningEmployees.Selected.ID And 
+                              Date = Date(varFiscalYearBase, 4, 1)
+                          )
+                        Width: =515
+                        Y: =60
+                      Children:
+                        - AddressCode_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ComboBoxEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              DataField: ="AddressCode"
+                              Default: =ThisItem.AddressCode
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,AddressCode)
+                              Required: =false
+                              Update: =DataCardValue4.Selected
+                              Width: =171
+                              X: =0
+                              Y: =0
+                            Children:
+                              - DataCardKey4:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue4:
+                                  Control: ComboBox@0.0.51
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DefaultSelectedItems: =If( !IsBlank(Parent.Default), [ Parent.Default ], [] )
+                                    DisplayMode: =Parent.DisplayMode
+                                    Items: =Choices([@EmployeeStatusTable].AddressCode)
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey4.Y + DataCardKey4.Height + 4
+                              - ErrorMessage4:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue4.Y + DataCardValue4.Height
+                              - StarVisible4:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =20
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey4.Y
+                        - Division_DataCard3:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ComboBoxEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              DataField: ="Division"
+                              Default: =ThisItem.Division
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Division)
+                              Required: =true
+                              Update: =DataCardValue9.Selected
+                              Width: =171
+                              X: =1
+                              Y: =0
+                            Children:
+                              - DataCardKey18:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue9:
+                                  Control: ComboBox@0.0.51
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DefaultSelectedItems: =[Parent.Default]
+                                    DisplayMode: =Parent.DisplayMode
+                                    Items: =Choices([@EmployeeStatusTable].Division)
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey18.Y + DataCardKey18.Height + 4
+                              - ErrorMessage18:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue9.Y + DataCardValue9.Height
+                              - StarVisible18:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =20
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey18.Y
+                        - Succession_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ToggleEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              DataField: ="Succession"
+                              Default: =ThisItem.Succession
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Succession)
+                              Required: =false
+                              Update: =DataCardValue11.Checked
+                              Width: =171
+                              X: =2
+                              Y: =0
+                            Children:
+                              - DataCardKey20:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue11:
+                                  Control: Toggle@1.1.5
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                                    Checked: =Parent.Default
+                                    DisplayMode: =Parent.DisplayMode
+                                    Height: =32
+                                    Label: =""
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey20.Y + DataCardKey20.Height + 4
+                              - ErrorMessage20:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue11.Y + DataCardValue11.Height
+                              - StarVisible20:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey20.Y
+                        - ROO_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ToggleEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              DataField: ="ROO_Confirmation"
+                              Default: =ThisItem.ROO
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,ROO)
+                              Required: =false
+                              Update: =DataCardValue12.Checked
+                              Width: =171
+                              X: =0
+                              Y: =1
+                            Children:
+                              - DataCardKey21:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue12:
+                                  Control: Toggle@1.1.5
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                                    Checked: =Parent.Default
+                                    DisplayMode: =Parent.DisplayMode
+                                    Height: =32
+                                    Label: =""
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey21.Y + DataCardKey21.Height + 4
+                              - ErrorMessage21:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue12.Y + DataCardValue12.Height
+                              - StarVisible21:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey21.Y
+                        - Resignation_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ToggleEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              DataField: ="Resignation"
+                              Default: =ThisItem.Resignation
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Resignation)
+                              Required: =false
+                              Update: =DataCardValue14.Checked
+                              Width: =171
+                              X: =1
+                              Y: =1
+                            Children:
+                              - DataCardKey22:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue14:
+                                  Control: Toggle@1.1.5
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                                    Checked: =Parent.Default
+                                    DisplayMode: =Parent.DisplayMode
+                                    Height: =32
+                                    Label: =""
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey22.Y + DataCardKey22.Height + 4
+                              - ErrorMessage22:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue14.Y + DataCardValue14.Height
+                              - StarVisible22:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey22.Y
+                        - Promotion_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ToggleEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              DataField: ="Promotion"
+                              Default: =ThisItem.Promotion
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Promotion)
+                              Required: =false
+                              Update: =DataCardValue16.Checked
+                              Width: =171
+                              X: =2
+                              Y: =1
+                            Children:
+                              - DataCardKey30:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue16:
+                                  Control: Toggle@1.1.5
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                                    Checked: =Parent.Default
+                                    DisplayMode: =Parent.DisplayMode
+                                    Height: =32
+                                    Label: =""
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey30.Y + DataCardKey30.Height + 4
+                              - ErrorMessage25:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue16.Y + DataCardValue16.Height
+                              - StarVisible25:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey30.Y
+                        - HQEmployment_DataCard3:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ToggleEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              DataField: ="HQEmployment"
+                              Default: =ThisItem.HQEmployment
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,HQEmployment)
+                              Required: =false
+                              Update: =DataCardValue19.Checked
+                              Width: =171
+                              X: =0
+                              Y: =2
+                            Children:
+                              - DataCardKey33:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue19:
+                                  Control: Toggle@1.1.5
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                                    Checked: =Parent.Default
+                                    DisplayMode: =Parent.DisplayMode
+                                    Height: =32
+                                    Label: =""
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey33.Y + DataCardKey33.Height + 4
+                              - ErrorMessage32:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue19.Y + DataCardValue19.Height
+                              - StarVisible32:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey33.Y
+                        - RegionalGrade_DataCard3:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ComboBoxEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              DataField: ="RegionalGrade"
+                              Default: =ThisItem.RegionalGrade
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,RegionalGrade)
+                              Required: =false
+                              Update: =DataCardValue15.Selected
+                              Width: =171
+                              X: =1
+                              Y: =2
+                            Children:
+                              - DataCardKey24:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue15:
+                                  Control: ComboBox@0.0.51
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DefaultSelectedItems: =[Parent.Default]
+                                    DisplayMode: =Parent.DisplayMode
+                                    Items: =Choices([@EmployeeStatusTable].RegionalGrade)
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey24.Y + DataCardKey24.Height + 4
+                              - ErrorMessage24:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue15.Y + DataCardValue15.Height
+                              - StarVisible24:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =20
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey24.Y
+                        - GlobalGrade_DataCard1:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ComboBoxEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              DataField: ="GlobalGrade"
+                              Default: =ThisItem.GlobalGrade
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,GlobalGrade)
+                              Required: =false
+                              Update: =DataCardValue20.Selected
+                              Width: =171
+                              X: =2
+                              Y: =2
+                            Children:
+                              - DataCardKey34:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue20:
+                                  Control: ComboBox@0.0.51
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DefaultSelectedItems: =[Parent.Default]
+                                    DisplayMode: =Parent.DisplayMode
+                                    Items: =Choices([@EmployeeStatusTable].GlobalGrade)
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey34.Y + DataCardKey34.Height + 4
+                              - ErrorMessage33:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue20.Y + DataCardValue20.Height
+                              - StarVisible33:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =20
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey34.Y
+                        - EmploymentType_DataCard3:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ComboBoxEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              DataField: ="BizCorp"
+                              Default: =ThisItem.EmploymentType
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,EmploymentType)
+                              Required: =false
+                              Update: =DataCardValue21.Selected
+                              Width: =171
+                              X: =0
+                              Y: =3
+                            Children:
+                              - DataCardKey35:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue21:
+                                  Control: ComboBox@0.0.51
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DefaultSelectedItems: =[Parent.Default]
+                                    DisplayMode: =Parent.DisplayMode
+                                    Items: =Choices([@EmployeeStatusTable].EmploymentType)
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey35.Y + DataCardKey35.Height + 4
+                              - ErrorMessage34:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue21.Y + DataCardValue21.Height
+                              - StarVisible34:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =20
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey35.Y
+                        - Mobility_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ToggleEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              DataField: ="Mobility"
+                              Default: =ThisItem.Mobility
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,Mobility)
+                              Required: =false
+                              Update: =DataCardValue18.Checked
+                              Width: =171
+                              X: =1
+                              Y: =3
+                            Children:
+                              - DataCardKey32:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue18:
+                                  Control: Toggle@1.1.5
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =If(Parent.Required, Substitute("{0}. Required.", "{0}", Parent.DisplayName), Parent.DisplayName)
+                                    Checked: =Parent.Default
+                                    DisplayMode: =Parent.DisplayMode
+                                    Height: =32
+                                    Label: =""
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey32.Y + DataCardKey32.Height + 4
+                              - ErrorMessage31:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue18.Y + DataCardValue18.Height
+                              - StarVisible31:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =30
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey32.Y
+                        - MobilityRegion_DataCard2:
+                            Control: TypedDataCard@1.0.7
+                            Variant: ComboBoxEdit
+                            Properties:
+                              BorderColor: =RGBA(0, 18, 107, 1)
+                              DataField: ="MobilityRegion"
+                              Default: =ThisItem.MobilityRegion
+                              DisplayMode: =DisplayMode.View
+                              DisplayName: =DataSourceInfo([@EmployeeStatusTable],DataSourceInfo.DisplayName,MobilityRegion)
+                              Required: =false
+                              Update: =DataCardValue17.Selected
+                              Width: =171
+                              X: =2
+                              Y: =3
+                            Children:
+                              - DataCardKey31:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldName
+                                  Properties:
+                                    Height: =22
+                                    Text: =Parent.DisplayName
+                                    Weight: ='TextCanvas.Weight'.Semibold
+                                    Width: =Parent.Width - 48
+                                    Wrap: =false
+                                    X: =24
+                                    Y: =10
+                              - DataCardValue17:
+                                  Control: ComboBox@0.0.51
+                                  MetadataKey: FieldValue
+                                  Properties:
+                                    AccessibleLabel: =Parent.DisplayName
+                                    DefaultSelectedItems: =[Parent.Default]
+                                    DisplayMode: =Parent.DisplayMode
+                                    Items: =Choices([@EmployeeStatusTable].MobilityRegion)
+                                    Required: =Parent.Required
+                                    ValidationState: =If(IsBlank(Parent.Error), "None", "Error")
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardKey31.Y + DataCardKey31.Height + 4
+                              - ErrorMessage30:
+                                  Control: Text@0.0.51
+                                  MetadataKey: ErrorMessage
+                                  Properties:
+                                    Height: =30
+                                    Text: =Parent.Error
+                                    Visible: =And(!IsBlank(Parent.Error), Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =Parent.Width - 48
+                                    X: =24
+                                    Y: =DataCardValue17.Y + DataCardValue17.Height
+                              - StarVisible30:
+                                  Control: Text@0.0.51
+                                  MetadataKey: FieldRequired
+                                  Properties:
+                                    Align: ='TextCanvas.Align'.Center
+                                    Height: =20
+                                    Text: ="*"
+                                    Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                                    Width: =30
+                                    Y: =DataCardKey31.Y
+      - warningHQTrue:
+          Control: Text@0.0.51
+          Properties:
+            Height: =77
+            Text: ="Are you sure the relevant staff is HQ employment staff?"
+            Visible: |-
+              =varHQToggleChanged And
+              varHQToggleState = true And
+              Coalesce(
+                  varCurrentYearRecord.HQEmployment,
+                  LookUp(
+                      EmployeeStatusTable,
+                      Employee.Id = galPlanningEmployees.Selected.ID And 
+                      Date = Date(Value(radPlanningDate.Selected.Value) - 1, 4, 1)
+                  ).HQEmployment,
+                  false
+              ) = false
+            Width: =195
+            X: =456
+            Y: =307
+      - warningHQFalse:
+          Control: Text@0.0.51
+          Properties:
+            Height: =77
+            Text: ="Please input the non-HQ staff in the remarks section and specify who will be the successor"
+            Visible: |-
+              =varHQToggleChanged And
+              varHQToggleState = false And
+              Coalesce(
+                  varCurrentYearRecord.HQEmployment,
+                  LookUp(
+                      EmployeeStatusTable,
+                      Employee.Id = galPlanningEmployees.Selected.ID And 
+                      Date = Date(Value(radPlanningDate.Selected.Value) - 1, 4, 1)
+                  ).HQEmployment,
+                  false
+              ) = true
+            Width: =195
+            X: =456
+            Y: =307
+      - lblDebug:
+          Control: Text@0.0.51
+          Properties:
+            Height: =30
+            Text: |-
+              ="Direct Emp: " & varDebugDirect & 
+              " | Mobility Emp: " & varDebugMobility & 
+              " | Total Emp: " & varDebugTotalEmployees &
+              " | Direct Status: " & varDebugDirectStatus &
+              " | Mobility Status: " & varDebugMobilityStatus &
+              " | Total Status: " & varDebugTotalStatus
+            Width: =647
+            X: =310
+            Y: =736
