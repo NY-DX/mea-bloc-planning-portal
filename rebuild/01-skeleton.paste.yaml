@@ -16,10 +16,12 @@
             AlignInContainer: =AlignInContainer.Stretch
             DropShadow: =DropShadow.None
             Fill: =uiPanel
+            FillPortions: =0
             Height: =64
             LayoutAlignItems: =LayoutAlignItems.Center
             LayoutDirection: =LayoutDirection.Horizontal
             LayoutGap: =16
+            LayoutMinHeight: =64
             PaddingLeft: =24
             PaddingRight: =24
           Children:
@@ -27,6 +29,7 @@
                 Control: Label@2.5.1
                 Properties:
                   Fill: =uiGold
+                  FillPortions: =0
                   Height: =32
                   Text: =""
                   Width: =6
@@ -44,6 +47,7 @@
                 Properties:
                   Align: =Align.Right
                   Color: =uiMuted
+                  FillPortions: =0
                   Height: =40
                   Size: =11
                   Text: =Upper(User().FullName)
@@ -53,6 +57,7 @@
           Properties:
             AlignInContainer: =AlignInContainer.Stretch
             Fill: =uiGold
+            FillPortions: =0
             Height: =2
             Text: =""
       - conPlanBody:
@@ -73,8 +78,10 @@
                   AlignInContainer: =AlignInContainer.Stretch
                   DropShadow: =DropShadow.None
                   Fill: =uiPanel
+                  FillPortions: =0
                   LayoutDirection: =LayoutDirection.Vertical
                   LayoutGap: =12
+                  LayoutMinWidth: =320
                   PaddingBottom: =16
                   PaddingLeft: =16
                   PaddingRight: =16
@@ -86,6 +93,7 @@
                       Properties:
                         AlignInContainer: =AlignInContainer.Stretch
                         Color: =uiGold
+                        FillPortions: =0
                         FontWeight: =FontWeight.Bold
                         Height: =24
                         Size: =12
@@ -103,9 +111,10 @@
                 Control: Label@2.5.1
                 Properties:
                   AlignInContainer: =AlignInContainer.Stretch
-                  Fill: =uiGoldDim
+                  Fill: =uiGold
+                  FillPortions: =0
                   Text: =""
-                  Width: =1
+                  Width: =2
             - conPlanMain:
                 Control: GroupContainer@1.5.0
                 Variant: AutoLayout
@@ -125,7 +134,8 @@
                       Control: Label@2.5.1
                       Properties:
                         AlignInContainer: =AlignInContainer.Stretch
-                        Color: =uiWhite
+                        Color: =uiInk
+                        FillPortions: =0
                         FontWeight: =FontWeight.Bold
                         Height: =40
                         Size: =20
@@ -143,8 +153,9 @@
           Control: Label@2.5.1
           Properties:
             AlignInContainer: =AlignInContainer.Stretch
-            Fill: =uiGoldDim
-            Height: =1
+            Fill: =uiGold
+            FillPortions: =0
+            Height: =2
             Text: =""
       - conPlanFooter:
           Control: GroupContainer@1.5.0
@@ -153,10 +164,12 @@
             AlignInContainer: =AlignInContainer.Stretch
             DropShadow: =DropShadow.None
             Fill: =uiPanel
+            FillPortions: =0
             Height: =64
             LayoutAlignItems: =LayoutAlignItems.Center
             LayoutDirection: =LayoutDirection.Horizontal
             LayoutGap: =12
+            LayoutMinHeight: =64
             PaddingLeft: =24
             PaddingRight: =24
           Children:
@@ -167,6 +180,7 @@
                   BorderColor: =uiGold
                   BorderThickness: =1
                   Color: =uiGold
+                  FillPortions: =0
                   FontWeight: =FontWeight.Bold
                   Height: =40
                   OnSelect: =Navigate(HomeScreen, ScreenTransition.Fade)
@@ -188,6 +202,7 @@
                   BorderColor: =uiMuted
                   BorderThickness: =1
                   Color: =uiMuted
+                  FillPortions: =0
                   FontWeight: =FontWeight.Bold
                   Height: =40
                   Size: =11
@@ -197,8 +212,9 @@
                 Control: Label@2.5.1
                 Properties:
                   Align: =Align.Center
-                  Color: =uiBg
+                  Color: =uiInk
                   Fill: =uiGoldDim
+                  FillPortions: =0
                   FontWeight: =FontWeight.Bold
                   Height: =40
                   Size: =11
