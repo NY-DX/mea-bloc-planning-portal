@@ -1,0 +1,9 @@
+- lblSidePlaceholder:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiMuted
+      FillPortions: =1
+      Size: =11
+      Text: ="Employee list arrives in piece 2."
+      VerticalAlign: =VerticalAlign.Top

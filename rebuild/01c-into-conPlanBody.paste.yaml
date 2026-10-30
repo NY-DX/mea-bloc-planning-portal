@@ -1,0 +1,42 @@
+- lblSideDivider:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Fill: =uiGold
+      FillPortions: =0
+      Text: =""
+      Width: =2
+- conPlanMain:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      DropShadow: =DropShadow.None
+      Fill: =uiBg
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =16
+      PaddingBottom: =24
+      PaddingLeft: =32
+      PaddingRight: =32
+      PaddingTop: =24
+    Children:
+      - lblMainTitle:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiInk
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =40
+            Size: =20
+            Text: ="SELECT AN EMPLOYEE"
+      - lblMainPlaceholder:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =1
+            Size: =12
+            Text: ="Year selector and planning form arrive in pieces 3 to 5."
+            VerticalAlign: =VerticalAlign.Top

@@ -1,0 +1,71 @@
+- lblPlanFooterLine:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Fill: =uiGold
+      FillPortions: =0
+      Height: =2
+      Text: =""
+- conPlanFooter:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      DropShadow: =DropShadow.None
+      Fill: =uiPanel
+      FillPortions: =0
+      Height: =64
+      LayoutAlignItems: =LayoutAlignItems.Center
+      LayoutDirection: =LayoutDirection.Horizontal
+      LayoutGap: =12
+      LayoutMinHeight: =64
+      PaddingLeft: =24
+      PaddingRight: =24
+    Children:
+      - lblBtnMenu:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =uiGold
+            BorderThickness: =1
+            Color: =uiGold
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =40
+            OnSelect: =Navigate(HomeScreen, ScreenTransition.Fade)
+            Size: =11
+            Text: ="MAIN MENU"
+            Width: =140
+      - lblFooterStatus:
+          Control: Label@2.5.1
+          Properties:
+            Color: =uiMuted
+            FillPortions: =1
+            Height: =40
+            Size: =10
+            Text: =""
+      - lblBtnSaveAll:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =uiMuted
+            BorderThickness: =1
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =40
+            Size: =11
+            Text: ="SAVE ALL"
+            Width: =140
+      - lblBtnSave:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =uiInk
+            Fill: =uiGoldDim
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =40
+            Size: =11
+            Text: ="SAVE"
+            Width: =140
