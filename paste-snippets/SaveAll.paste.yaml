@@ -158,7 +158,6 @@
             4000
         )
       Text: ="Save All"
-      Tooltip: ="Saves this year, then copies the shared settings to every later year"
       Width: =108
       X: =1111
       Y: =693
