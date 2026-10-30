@@ -9,3 +9,4 @@
 Src/_EditorState.pa.yaml
 !paste-snippets/
 !paste-snippets/*.yaml
+!paste-snippets/*.txt

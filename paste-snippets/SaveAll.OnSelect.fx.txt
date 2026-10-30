@@ -1,0 +1,155 @@
+// STEP 1: capture what will be copied BEFORE the normal save resets the form
+Set(
+    varSaveAllSource,
+    {
+        EmployeeId: varSelectedEmployee.ID,
+        EmployeeName: varSelectedEmployee.'FirstName ' & " " & varSelectedEmployee.'LastName ',
+        StartYear: Value(radPlanningDate.Selected.Value),
+        GlobalGrade: DataCardValue8.Selected.Value,
+        RegionalGrade: DataCardValue1.Selected.Value,
+        Division: DataCardValue7.Selected.Value,
+        EmploymentType: drpEmpType.Selected.Value,
+        HQEmployment: tglHQ.Checked,
+        Mobility: tglMobility.Checked,
+        MobilityRegion: DataCardValue10.Selected.Value,
+        MobilityACId: DataCardValue22.Selected.Id,
+        MobilityACValue: DataCardValue22.Selected.Value,
+        AddressCode: drpAddressCode.Selected,
+        Resigned: tglResignation.Checked
+    }
+);
+
+// STEP 2: run the normal Save for the selected year
+Select(ButtonCanvas5);
+
+// STEP 3: copy the shared settings to every later planning year.
+// Promotion, Resignation, Succession, Remark and Final Submission are NOT copied.
+// Existing later-year records are overwritten; missing ones are created.
+// Skipped when the employee is being resigned (Save already removes later years).
+If(
+    !varSaveAllSource.Resigned,
+    ForAll(
+        Filter(colPlanningDates, Year(DateValue) > varSaveAllSource.StartYear) As planYear,
+        With(
+            {
+                existingRecord: LookUp(
+                    EmployeeStatusTable,
+                    Employee.Id = varSaveAllSource.EmployeeId &&
+                    Date = planYear.DateValue
+                )
+            },
+            If(
+                IsBlank(existingRecord),
+                // INSERT (same shape as the Save button's insert)
+                Patch(
+                    EmployeeStatusTable,
+                    Defaults(EmployeeStatusTable),
+                    {
+                        Employee: {
+                            '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                            Id: varSaveAllSource.EmployeeId,
+                            Value: varSaveAllSource.EmployeeName
+                        },
+                        Date: planYear.DateValue,
+                        Title: GUID(),
+                        GlobalGrade: {Value: varSaveAllSource.GlobalGrade},
+                        RegionalGrade: {Value: varSaveAllSource.RegionalGrade},
+                        Division: {Value: varSaveAllSource.Division},
+                        HQEmployment: varSaveAllSource.HQEmployment,
+                        EmploymentType: {Value: varSaveAllSource.EmploymentType},
+                        Promotion: false,
+                        Mobility: varSaveAllSource.Mobility,
+                        MobilityRegion: If(
+                            varSaveAllSource.Mobility,
+                            {Value: varSaveAllSource.MobilityRegion},
+                            {
+                                '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                Id: -1,
+                                Value: ""
+                            }
+                        ),
+                        MobilityAC: If(
+                            varSaveAllSource.Mobility,
+                            {
+                                '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                Id: varSaveAllSource.MobilityACId,
+                                Value: varSaveAllSource.MobilityACValue
+                            },
+                            {
+                                '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                Id: -1,
+                                Value: ""
+                            }
+                        ),
+                        Resignation: false,
+                        Succession: false,
+                        AddressCode: varSaveAllSource.AddressCode,
+                        'Last Updated': Now()
+                    }
+                ),
+                // UPDATE (same shape as the Save button's update, minus the per-year fields)
+                Patch(
+                    EmployeeStatusTable,
+                    existingRecord,
+                    {
+                        'Last Updated': Now(),
+                        GlobalGrade: {Value: varSaveAllSource.GlobalGrade},
+                        RegionalGrade: {Value: varSaveAllSource.RegionalGrade},
+                        Division: {Value: varSaveAllSource.Division},
+                        HQEmployment: varSaveAllSource.HQEmployment,
+                        EmploymentType: {Value: varSaveAllSource.EmploymentType},
+                        Mobility: varSaveAllSource.Mobility,
+                        MobilityRegion: If(
+                            varSaveAllSource.Mobility,
+                            {Value: varSaveAllSource.MobilityRegion},
+                            {
+                                '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                Id: -1,
+                                Value: ""
+                            }
+                        ),
+                        MobilityAC: If(
+                            varSaveAllSource.Mobility,
+                            {
+                                '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                Id: varSaveAllSource.MobilityACId,
+                                Value: varSaveAllSource.MobilityACValue
+                            },
+                            {
+                                '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                Id: -1,
+                                Value: ""
+                            }
+                        ),
+                        AddressCode: varSaveAllSource.AddressCode
+                    }
+                )
+            )
+        )
+    )
+);
+
+// STEP 4: refresh the status collections (same as the normal Save)
+Clear(colDirectStatus);
+ForAll(
+    colDirectEmployees As emp,
+    Collect(colDirectStatus, Filter(EmployeeStatusTable, Employee.Id = emp.ID))
+);
+Clear(colMobilityStatus);
+ForAll(
+    colMobilityEmployees As mobEmp,
+    Collect(colMobilityStatus, Filter(EmployeeStatusTable, Employee.Id = mobEmp.ID))
+);
+ClearCollect(colEmployeeStatus, colDirectStatus);
+Collect(colEmployeeStatus, colMobilityStatus);
+
+Notify(
+    If(
+        varSaveAllSource.Resigned,
+        "Saved " & varSaveAllSource.EmployeeName & " for " & varSaveAllSource.StartYear & " only (resignation removes later years).",
+        "Saved " & varSaveAllSource.EmployeeName & " for " & varSaveAllSource.StartYear & " and " &
+        CountRows(Filter(colPlanningDates, Year(DateValue) > varSaveAllSource.StartYear)) & " later year(s)."
+    ),
+    NotificationType.Success,
+    4000
+)
