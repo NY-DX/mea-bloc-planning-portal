@@ -1,0 +1,206 @@
+- conPlanRoot:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      Fill: =uiBg
+      Height: =Parent.Height
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =0
+      Width: =Parent.Width
+    Children:
+      - conPlanHeader:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            DropShadow: =DropShadow.None
+            Fill: =uiPanel
+            Height: =64
+            LayoutAlignItems: =LayoutAlignItems.Center
+            LayoutDirection: =LayoutDirection.Horizontal
+            LayoutGap: =16
+            PaddingLeft: =24
+            PaddingRight: =24
+          Children:
+            - lblPlanAccent:
+                Control: Label@2.5.1
+                Properties:
+                  Fill: =uiGold
+                  Height: =32
+                  Text: =""
+                  Width: =6
+            - lblPlanTitle:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =uiGold
+                  FillPortions: =1
+                  FontWeight: =FontWeight.Bold
+                  Height: =40
+                  Size: =18
+                  Text: ="PERSONNEL PLANNING"
+            - lblPlanUser:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: =uiMuted
+                  Height: =40
+                  Size: =11
+                  Text: =Upper(User().FullName)
+                  Width: =320
+      - lblPlanHeaderLine:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Fill: =uiGold
+            Height: =2
+            Text: =""
+      - conPlanBody:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            DropShadow: =DropShadow.None
+            Fill: =uiBg
+            FillPortions: =1
+            LayoutDirection: =LayoutDirection.Horizontal
+            LayoutGap: =0
+          Children:
+            - conPlanSidebar:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
+                  DropShadow: =DropShadow.None
+                  Fill: =uiPanel
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =12
+                  PaddingBottom: =16
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =16
+                  Width: =320
+                Children:
+                  - lblSideTitle:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiGold
+                        FontWeight: =FontWeight.Bold
+                        Height: =24
+                        Size: =12
+                        Text: ="EMPLOYEES"
+                  - lblSidePlaceholder:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =1
+                        Size: =11
+                        Text: ="Employee list arrives in piece 2."
+                        VerticalAlign: =VerticalAlign.Top
+            - lblSideDivider:
+                Control: Label@2.5.1
+                Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
+                  Fill: =uiGoldDim
+                  Text: =""
+                  Width: =1
+            - conPlanMain:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
+                  DropShadow: =DropShadow.None
+                  Fill: =uiBg
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =16
+                  PaddingBottom: =24
+                  PaddingLeft: =32
+                  PaddingRight: =32
+                  PaddingTop: =24
+                Children:
+                  - lblMainTitle:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiWhite
+                        FontWeight: =FontWeight.Bold
+                        Height: =40
+                        Size: =20
+                        Text: ="SELECT AN EMPLOYEE"
+                  - lblMainPlaceholder:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =1
+                        Size: =12
+                        Text: ="Year selector and planning form arrive in pieces 3 to 5."
+                        VerticalAlign: =VerticalAlign.Top
+      - lblPlanFooterLine:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Fill: =uiGoldDim
+            Height: =1
+            Text: =""
+      - conPlanFooter:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            DropShadow: =DropShadow.None
+            Fill: =uiPanel
+            Height: =64
+            LayoutAlignItems: =LayoutAlignItems.Center
+            LayoutDirection: =LayoutDirection.Horizontal
+            LayoutGap: =12
+            PaddingLeft: =24
+            PaddingRight: =24
+          Children:
+            - lblBtnMenu:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  BorderColor: =uiGold
+                  BorderThickness: =1
+                  Color: =uiGold
+                  FontWeight: =FontWeight.Bold
+                  Height: =40
+                  OnSelect: =Navigate(HomeScreen, ScreenTransition.Fade)
+                  Size: =11
+                  Text: ="MAIN MENU"
+                  Width: =140
+            - lblFooterStatus:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =uiMuted
+                  FillPortions: =1
+                  Height: =40
+                  Size: =10
+                  Text: =""
+            - lblBtnSaveAll:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  BorderColor: =uiMuted
+                  BorderThickness: =1
+                  Color: =uiMuted
+                  FontWeight: =FontWeight.Bold
+                  Height: =40
+                  Size: =11
+                  Text: ="SAVE ALL"
+                  Width: =140
+            - lblBtnSave:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =uiBg
+                  Fill: =uiGoldDim
+                  FontWeight: =FontWeight.Bold
+                  Height: =40
+                  Size: =11
+                  Text: ="SAVE"
+                  Width: =140

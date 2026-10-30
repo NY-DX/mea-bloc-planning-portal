@@ -1,0 +1,11 @@
+// Paste into: App > Formulas (named formulas). Shared colors for PlanningScreen.
+// Black / gold / white theme.
+uiBg = RGBA(10, 10, 12, 1);
+uiPanel = RGBA(22, 22, 24, 1);
+uiPanelRaised = RGBA(34, 34, 37, 1);
+uiGold = RGBA(212, 160, 23, 1);
+uiGoldDim = RGBA(212, 160, 23, 0.35);
+uiWhite = RGBA(240, 240, 240, 1);
+uiMuted = RGBA(150, 150, 150, 1);
+uiDanger = RGBA(220, 70, 60, 1);
+uiOk = RGBA(90, 190, 110, 1);
