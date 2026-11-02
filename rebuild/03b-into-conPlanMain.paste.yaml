@@ -1,0 +1,73 @@
+- conPsYearBar:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      DropShadow: =DropShadow.None
+      FillPortions: =0
+      Height: =72
+      LayoutAlignItems: =LayoutAlignItems.Center
+      LayoutDirection: =LayoutDirection.Horizontal
+      LayoutGap: =16
+      LayoutMinHeight: =72
+      Visible: =!IsBlank(psSelected)
+    Children:
+      - lblPsYearCaption:
+          Control: Label@2.5.1
+          Properties:
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =24
+            Size: =10
+            Text: ="PLANNING YEAR"
+            Width: =120
+      - galPsYears:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
+          Properties:
+            BorderThickness: =0
+            FillPortions: =0
+            Height: =64
+            Items: =psYears
+            OnSelect: =Set(psFY, ThisItem.FY)
+            TemplateFill: =If(ThisItem.FY = psFY, RGBA(212, 160, 23, 0.18), RGBA(0, 0, 0, 0.04))
+            TemplatePadding: =4
+            TemplateSize: =64
+            Width: =650
+            WrapCount: =5
+          Children:
+            - lblPsFYText:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =If(ThisItem.FY = psFY, uiGold, uiInk)
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  OnSelect: =Select(Parent)
+                  Size: =14
+                  Text: =Text(ThisItem.FY)
+                  Width: =Parent.TemplateWidth
+                  X: =0
+                  Y: =6
+            - lblPsFYState:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =Switch(Self.Text, "NO DATA", uiMuted, "OUTDATED", uiDanger, uiOk)
+                  FontWeight: =FontWeight.Bold
+                  Height: =18
+                  OnSelect: =Select(Parent)
+                  Size: =8
+                  Text: |-
+                    =With(
+                        {rec: LookUp(psStatus, Year(Date) = ThisItem.FY)},
+                        If(
+                            IsBlank(rec), "NO DATA",
+                            DateDiff(rec.'Last Updated', Today(), TimeUnit.Months) > psOutdatedMonths, "OUTDATED",
+                            "UP TO DATE"
+                        )
+                    )
+                  Width: =Parent.TemplateWidth
+                  X: =0
+                  Y: =36

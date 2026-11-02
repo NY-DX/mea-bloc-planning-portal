@@ -1,0 +1,11 @@
+// Set these by hand (select the control, choose the property, paste the formula).
+
+// galPsEmployees  >  OnSelect   (selecting an employee also loads their records for all years)
+Set(psSelected, ThisItem);
+ClearCollect(psStatus, Filter(EmployeeStatusTable, Employee.Id = ThisItem.ID))
+
+// lblMainPlaceholder  >  FillPortions
+0
+
+// lblMainPlaceholder  >  Height
+24
