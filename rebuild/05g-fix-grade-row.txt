@@ -1,0 +1,34 @@
+// Fix for the GRADE row (captions disappeared after it was made taller).
+// Goal: make the GRADE row identical to the POSITION row, which works,
+// and show the promotion APPLY link in the "GRADE" heading instead of under the toggle.
+
+// 1. conPsRowGrade  >  Height            64
+// 2. conPsRowGrade  >  LayoutMinHeight   64
+// 3. cmbPsRegional  >  Height            36
+// 4. Delete the control  lblPsPromoApply
+
+// 5. lblPsSecGrade  >  Text
+"GRADE" &
+If(
+    tglPsPromotion.Checked && !IsBlank(psPromoGrade) && cmbPsRegional.Selected.Value <> psPromoGrade,
+    "      ›  CLICK TO APPLY PROMOTION: " & psPromoGrade & " (one step above FY" & (psFY - 1) & ")",
+    ""
+)
+
+// 6. lblPsSecGrade  >  OnSelect
+If(
+    tglPsPromotion.Checked && !IsBlank(psPromoGrade),
+    Set(psRegionalOverride, psPromoGrade)
+)
+
+// 7. Still pending from piece 2 (your app still shows the placeholder texts):
+// lblMainTitle  >  Text
+If(IsBlank(psSelected), "SELECT AN EMPLOYEE", Upper(psSelected.FullName))
+
+// lblMainPlaceholder  >  Text
+If(
+    IsBlank(psSelected),
+    "Pick someone from the list on the left.",
+    psSelected.AddressCode & "  ·  " & psSelected.EmployeeNo &
+    If(psSelected.Kind = "Mobility", "  ·  Mobility (assigned to one of your departments)", "")
+)
