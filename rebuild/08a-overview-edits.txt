@@ -9,7 +9,7 @@ ForAll(
     psEmployees As emp,
     Collect(psAllStatus, Filter(EmployeeStatusTable, Employee.Id = emp.ID))
 );
-Set(psOvPick, Blank());
+Set(psOvPick, 0);   // 0 = no year picked
 Set(psShowOverview, true)
 
 // Pastes (right-click the named container > Paste code), in this order:

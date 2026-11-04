@@ -1,0 +1,31 @@
+// Fix: "No type found for variable 'psOvPick'". Use 0 for "no year picked" so it is always a number.
+
+// lblBtnMenu  >  OnSelect
+Clear(psAllStatus);
+ForAll(
+    psEmployees As emp,
+    Collect(psAllStatus, Filter(EmployeeStatusTable, Employee.Id = emp.ID))
+);
+Set(psOvPick, 0);
+Set(psShowOverview, true)
+
+// lblPsOvName (inside galPsOverview)  >  OnSelect
+Set(psOvPick, 0);
+Select(Parent)
+
+// galPsOverview  >  OnSelect
+Set(psSelected, LookUp(psEmployees, ID = ThisItem.ID));
+Set(psLocked, psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
+Set(psConfirmRemove, false);
+ClearCollect(psStatus, Filter(psAllStatus, Employee.Id = ThisItem.ID));
+If(psOvPick > 0, Set(psFY, psOvPick));
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false);
+Set(psShowOverview, false)
+
+// Then check galPsOvCells (the small gallery inside each overview row):
+//   Items     should be:  ForAll(psYears As y, {FY: y.FY, EmpId: ThisItem.ID})
+//   OnSelect  should be:  Set(psOvPick, ThisItem.FY); Select(Parent)
+// If either is underlined in red, send me the "View Problem" text.

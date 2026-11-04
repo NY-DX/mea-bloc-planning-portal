@@ -9,7 +9,7 @@ OPEN_ROW = """Set(psSelected, LookUp(psEmployees, ID = ThisItem.ID));
 Set(psLocked, psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
 Set(psConfirmRemove, false);
 ClearCollect(psStatus, Filter(psAllStatus, Employee.Id = ThisItem.ID));
-If(!IsBlank(psOvPick), Set(psFY, psOvPick));
+If(psOvPick > 0, Set(psFY, psOvPick));
 Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
 Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
 Set(psRegionalOverride, Blank());
@@ -31,7 +31,7 @@ cells = node("galPsOvCells", "Gallery@2.15.0", {
     "OnSelect": "Set(psOvPick, ThisItem.FY);\nSelect(Parent)", "TemplatePadding": "3", "TemplateSize": "Parent.TemplateHeight - 6",
     "Width": f"Parent.TemplateWidth - {NAME_W}", "WrapCount": "5", "X": str(NAME_W), "Y": "0"}, [cell], VAR)
 name = node("lblPsOvName", LBL, {"Color": "uiInk", "FontWeight": "FontWeight.Semibold", "Height": "Parent.TemplateHeight",
-    "OnSelect": "Set(psOvPick, Blank());\nSelect(Parent)", "Size": "11",
+    "OnSelect": "Set(psOvPick, 0);\nSelect(Parent)", "Size": "11",
     "Text": 'ThisItem.FullName & Switch(ThisItem.Kind, "Planned", "  (planned)", "Mobility", "  (mobility)", "")',
     "Width": str(NAME_W - 10), "X": "0", "Y": "0"})
 gal = node("galPsOverview", "Gallery@2.15.0", {"AlignInContainer": "AlignInContainer.Stretch", "BorderThickness": "0",

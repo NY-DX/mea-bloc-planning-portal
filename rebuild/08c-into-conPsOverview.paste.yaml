@@ -11,7 +11,7 @@
         Set(psLocked, psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
         Set(psConfirmRemove, false);
         ClearCollect(psStatus, Filter(psAllStatus, Employee.Id = ThisItem.ID));
-        If(!IsBlank(psOvPick), Set(psFY, psOvPick));
+        If(psOvPick > 0, Set(psFY, psOvPick));
         Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
         Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
         Set(psRegionalOverride, Blank());
@@ -27,7 +27,7 @@
             FontWeight: =FontWeight.Semibold
             Height: =Parent.TemplateHeight
             OnSelect: |-
-              =Set(psOvPick, Blank());
+              =Set(psOvPick, 0);
               Select(Parent)
             Size: =11
             Text: =ThisItem.FullName & Switch(ThisItem.Kind, "Planned", "  (planned)", "Mobility", "  (mobility)", "")
