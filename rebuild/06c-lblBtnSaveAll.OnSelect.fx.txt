@@ -1,6 +1,7 @@
 // lblBtnSaveAll > OnSelect: save the selected year, then copy the shared settings to every later year.
 // Copied: Biz/Corp, HR Code, Address Code, Regional and Global Grade, HQ, Mobility (+ region and address code).
-// Not copied: Promotion, Resignation, Succession, Remark. Later-year records are overwritten or created.
+// Not copied: Promotion, Resignation, Succession, Remark. Later-year records are overwritten or created,
+// but never past a year in which the employee resigns.
 Set(psSaveError, "");
 
 // 1. This year's record (same as SAVE)
@@ -66,7 +67,7 @@ If(
     IsBlank(psSaveError),
     IfError(
         ForAll(
-            Filter(psYears, FY > psFY) As yr,
+            Filter(psYears, FY > psFY && (IsBlank(lblPsResignFY.Text) || FY <= Value(lblPsResignFY.Text))) As yr,
             With(
                 {existing: LookUp(psStatus, Year(Date) = yr.FY)},
                 With(
@@ -119,7 +120,8 @@ If(
                     )
                 )
             )
-        ),
+        );
+        true,
         Set(psSaveError, "later years: " & FirstError.Message)
     )
 );
@@ -127,7 +129,7 @@ If(
 If(
     IsBlank(psSaveError),
     Notify(
-        "Saved FY" & psFY & " for " & psSelected.FullName & " and copied it to FY" & (psFY + 1) & "–FY" & Max(psYears, FY) & ".",
+        "Saved FY" & psFY & " for " & psSelected.FullName & " and copied it to the later years.",
         NotificationType.Success
     ),
     Notify("Save All stopped: " & psSaveError, NotificationType.Error)

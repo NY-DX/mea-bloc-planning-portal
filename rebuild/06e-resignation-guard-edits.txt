@@ -1,0 +1,48 @@
+// Resignation guard: after the year in which an employee resigns there is no planning.
+// First paste 06d-into-conPlanFooter.paste.yaml (hidden helper lblPsResignFY), then set these.
+
+// lblBtnSave  >  DisplayMode
+If(
+    IsBlank(psSelected) || psLocked || !IsBlank(lblPsMissing.Text) ||
+        (!IsBlank(lblPsResignFY.Text) && psFY > Value(lblPsResignFY.Text)),
+    DisplayMode.Disabled,
+    DisplayMode.Edit
+)
+
+// lblBtnSaveAll  >  DisplayMode
+If(
+    IsBlank(psSelected) || psLocked || !IsBlank(lblPsMissing.Text) || tglPsResignation.Checked ||
+        psFY = Max(psYears, FY) ||
+        (!IsBlank(lblPsResignFY.Text) && psFY >= Value(lblPsResignFY.Text)),
+    DisplayMode.Disabled,
+    DisplayMode.Edit
+)
+
+// lblFooterStatus  >  Text
+If(
+    IsBlank(psSelected), "",
+    psLocked, "Read-only: this mobility employee is planned by their home department.",
+    !IsBlank(lblPsResignFY.Text) && psFY > Value(lblPsResignFY.Text),
+        "Resigns in FY" & lblPsResignFY.Text & ": no planning after that year.",
+    !IsBlank(lblPsMissing.Text), "Missing: " & lblPsMissing.Text,
+    psConfirmResign, "Resignation deletes FY" & (psFY + 1) & " onwards for this employee. Click CONFIRM SAVE to continue.",
+    IsBlank(psRecord), "FY" & psFY & " will be created when you save.",
+    "FY" & psFY & " will be updated when you save."
+)
+
+// lblPsFYState  (inside galPsYears)  >  Text
+With(
+    {rec: LookUp(psStatus, Year(Date) = ThisItem.FY), resignFY: lblPsResignFY.Text},
+    If(
+        !IsBlank(resignFY) && ThisItem.FY > Value(resignFY), "AFTER RESIGNATION",
+        !IsBlank(rec) && rec.Resignation, "RESIGNS",
+        IsBlank(rec), "NO DATA",
+        DateDiff(rec.'Last Updated', Today(), TimeUnit.Months) > psOutdatedMonths, "OUTDATED",
+        "UP TO DATE"
+    )
+)
+
+// lblPsFYState  >  Color
+Switch(Self.Text, "NO DATA", uiMuted, "AFTER RESIGNATION", uiMuted, "RESIGNS", uiGold, "OUTDATED", uiDanger, uiOk)
+
+// lblBtnSaveAll  >  OnSelect   -> paste the updated file 06c-lblBtnSaveAll.OnSelect.fx.txt again

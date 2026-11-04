@@ -1,0 +1,12 @@
+- lblPsResignFY:
+    Control: Label@2.5.1
+    Properties:
+      FillPortions: =0
+      Text: |-
+        =// First fiscal year in which this employee resigns (blank if none)
+        With(
+            {resigned: Filter(psStatus, Resignation)},
+            If(CountRows(resigned) = 0, "", Text(Min(resigned, Year(Date))))
+        )
+      Visible: =false
+      Width: =0
