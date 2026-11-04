@@ -1,0 +1,24 @@
+// Layout: name on the left, year tiles top right, form without scrolling.
+// Same control names and formulas as now, so Save / Save All / validation keep working.
+
+// 1. Delete these three (directly inside conPlanMain):
+//      lblMainTitle, lblMainPlaceholder, conPsYearBar   (conPsYearBar includes galPsYears and lblPsRemoveHire)
+
+// 2. Right-click conPlanMain > Paste code:   11b-part01-into-conPlanMain   (empty top row conPsTopBar)
+//    It lands at the BOTTOM of conPlanMain (after conPsForm). Move it to the top:
+//    drag conPsTopBar above conPsForm in the tree view
+//    (or right-click conPsTopBar > Reorder > Send to back; in auto layout that makes it first).
+
+// 3. Right-click conPsTopBar > Paste code:   11b-part02-into-conPsTopBar   (name block + REMOVE PLANNED HIRE)
+// 4. Right-click conPsTopBar > Paste code:   11b-part03-into-conPsTopBar   (year tiles, pasted with their labels in one go)
+
+// 5. conPsForm  >  LayoutGap
+4
+
+// 6. PLANNED HIRE tag no longer wraps:
+// lblPsEmpTag (inside galPsEmployees)  >  Width
+100
+// lblPsEmpTag  >  X
+Parent.TemplateWidth - 110
+// lblPsEmpSub (inside galPsEmployees)  >  Width
+Parent.TemplateWidth - 130

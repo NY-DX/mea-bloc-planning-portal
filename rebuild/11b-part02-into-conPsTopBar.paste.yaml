@@ -1,0 +1,71 @@
+- conPsTitleBlock:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =2
+      LayoutJustifyContent: =LayoutJustifyContent.Center
+    Children:
+      - lblMainTitle:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiInk
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =20
+            Text: =If(IsBlank(psSelected), "SELECT AN EMPLOYEE", Upper(psSelected.FullName))
+      - lblMainPlaceholder:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            Height: =22
+            Size: =11
+            Text: |-
+              =If(
+                  IsBlank(psSelected),
+                  "Pick someone from the list on the left.",
+                  psSelected.AddressCode & "  ·  " & psSelected.EmployeeNo &
+                  Switch(psSelected.Kind, "Mobility", "  ·  Mobility (assigned to one of your departments)", "Planned", "  ·  Planned hire", "")
+              )
+- lblPsRemoveHire:
+    Control: Label@2.5.1
+    Properties:
+      Align: =Align.Center
+      BorderColor: =uiDanger
+      BorderThickness: =1
+      Color: =uiDanger
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =36
+      OnSelect: |-
+        =If(
+            !psConfirmRemove,
+            Set(psConfirmRemove, true),
+
+            Set(psConfirmRemove, false);
+            Set(psHireError, "");
+            IfError(
+                Remove(EmployeeStatusTable, psStatus);
+                Remove(EmployeeTable, LookUp(EmployeeTable, ID = psSelected.ID));
+                true,
+                Set(psHireError, FirstError.Message)
+            );
+            If(
+                IsBlank(psHireError),
+                Notify("Removed planned hire " & psSelected.FullName & ".", NotificationType.Success);
+                RemoveIf(psEmployees, ID = psSelected.ID);
+                Set(psSelected, Blank());
+                Clear(psStatus),
+                Notify("Could not remove: " & psHireError, NotificationType.Error)
+            )
+        )
+      Size: =9
+      Text: =If(psConfirmRemove, "CLICK AGAIN TO REMOVE", "REMOVE PLANNED HIRE")
+      Visible: =!IsBlank(psSelected) && psSelected.Kind = "Planned"
+      Width: =170
