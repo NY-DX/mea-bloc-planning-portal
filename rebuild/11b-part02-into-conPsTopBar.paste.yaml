@@ -2,6 +2,7 @@
     Control: GroupContainer@1.5.0
     Variant: AutoLayout
     Properties:
+      AlignInContainer: =AlignInContainer.Stretch
       DropShadow: =DropShadow.None
       FillPortions: =1
       LayoutDirection: =LayoutDirection.Vertical
@@ -15,7 +16,7 @@
             Color: =uiInk
             FillPortions: =0
             FontWeight: =FontWeight.Bold
-            Height: =36
+            Height: =32
             Size: =20
             Text: =If(IsBlank(psSelected), "SELECT AN EMPLOYEE", Upper(psSelected.FullName))
       - lblMainPlaceholder:

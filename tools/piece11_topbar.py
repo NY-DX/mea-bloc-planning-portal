@@ -23,10 +23,10 @@ state_color = section(e7, "lblPsFYState  >  Color")
 remove = section(e9, "lblPsRemoveHire  >  OnSelect")
 assert state_text and state_color and remove
 
-title_block = node("conPsTitleBlock", GC, {"DropShadow": "DropShadow.None", "FillPortions": "1",
+title_block = node("conPsTitleBlock", GC, {"AlignInContainer": "AlignInContainer.Stretch", "DropShadow": "DropShadow.None", "FillPortions": "1",
     "LayoutDirection": "LayoutDirection.Vertical", "LayoutGap": "2", "LayoutJustifyContent": "LayoutJustifyContent.Center"}, [
     node("lblMainTitle", LBL, {"AlignInContainer": "AlignInContainer.Stretch", "Color": "uiInk", "FillPortions": "0",
-        "FontWeight": "FontWeight.Bold", "Height": "36", "Size": "20",
+        "FontWeight": "FontWeight.Bold", "Height": "32", "Size": "20",
         "Text": 'If(IsBlank(psSelected), "SELECT AN EMPLOYEE", Upper(psSelected.FullName))'}),
     node("lblMainPlaceholder", LBL, {"AlignInContainer": "AlignInContainer.Stretch", "Color": "uiMuted", "FillPortions": "0",
         "Height": "22", "Size": "11", "Text":
@@ -50,8 +50,8 @@ years = node("galPsYears", "Gallery@2.15.0", {"BorderThickness": "0", "FillPorti
         "Width": "Parent.TemplateWidth", "X": "0", "Y": "36"}),
 ], VAR)
 top = node("conPsTopBar", GC, {"AlignInContainer": "AlignInContainer.Stretch", "DropShadow": "DropShadow.None",
-    "FillPortions": "0", "Height": "72", "LayoutAlignItems": "LayoutAlignItems.Center",
-    "LayoutDirection": "LayoutDirection.Horizontal", "LayoutGap": "16", "LayoutMinHeight": "72"},
+    "FillPortions": "0", "Height": "76", "LayoutAlignItems": "LayoutAlignItems.Center",
+    "LayoutDirection": "LayoutDirection.Horizontal", "LayoutGap": "16", "LayoutMinHeight": "76"},
     [title_block, remove_btn, years], "AutoLayout")
 for i, (t, lines) in enumerate(split_bfs([top], "conPlanMain"), 1):
     fn = f"{out}/11b-part{i:02d}-into-{t}.paste.yaml"

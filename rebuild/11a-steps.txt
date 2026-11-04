@@ -22,3 +22,9 @@
 Parent.TemplateWidth - 110
 // lblPsEmpSub (inside galPsEmployees)  >  Width
 Parent.TemplateWidth - 130
+
+// 7. Fix for the cut-off subtitle (already included if you paste the 11b files again):
+// conPsTitleBlock  >  AlignInContainer   AlignInContainer.Stretch
+// conPsTopBar      >  Height             76
+// conPsTopBar      >  LayoutMinHeight    76
+// lblMainTitle     >  Height             32

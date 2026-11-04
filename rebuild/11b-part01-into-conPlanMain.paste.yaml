@@ -5,8 +5,8 @@
       AlignInContainer: =AlignInContainer.Stretch
       DropShadow: =DropShadow.None
       FillPortions: =0
-      Height: =72
+      Height: =76
       LayoutAlignItems: =LayoutAlignItems.Center
       LayoutDirection: =LayoutDirection.Horizontal
       LayoutGap: =16
-      LayoutMinHeight: =72
+      LayoutMinHeight: =76
