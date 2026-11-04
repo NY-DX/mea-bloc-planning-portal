@@ -11,7 +11,7 @@ def render(n, ind=0):
     out.append(f"{sp}    Properties:")
     for k in sorted(n["props"]):
         v = n["props"][k].strip("\n")
-        if "\n" in v:
+        if "\n" in v or ": " in v or " #" in v:  # block scalar keeps YAML from misreading the formula
             out.append(f"{sp}      {k}: |-")
             lines = v.split("\n")
             out.append(f"{sp}        ={lines[0]}")

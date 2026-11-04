@@ -1,0 +1,85 @@
+- galPsOverview:
+    Control: Gallery@2.15.0
+    Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      BorderThickness: =0
+      FillPortions: =1
+      Items: =Sort(psEmployees, Kind & "|" & FullName)
+      OnSelect: |-
+        =Set(psSelected, LookUp(psEmployees, ID = ThisItem.ID));
+        Set(psLocked, psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
+        Set(psConfirmRemove, false);
+        ClearCollect(psStatus, Filter(psAllStatus, Employee.Id = ThisItem.ID));
+        If(!IsBlank(psOvPick), Set(psFY, psOvPick));
+        Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+        Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+        Set(psRegionalOverride, Blank());
+        Set(psConfirmResign, false);
+        Set(psShowOverview, false)
+      TemplateFill: =If(ThisItem.ID = psSelected.ID, RGBA(212, 160, 23, 0.10), RGBA(0, 0, 0, 0))
+      TemplateSize: =46
+    Children:
+      - lblPsOvName:
+          Control: Label@2.5.1
+          Properties:
+            Color: =uiInk
+            FontWeight: =FontWeight.Semibold
+            Height: =Parent.TemplateHeight
+            OnSelect: |-
+              =Set(psOvPick, Blank());
+              Select(Parent)
+            Size: =11
+            Text: =ThisItem.FullName & Switch(ThisItem.Kind, "Planned", "  (planned)", "Mobility", "  (mobility)", "")
+            Width: =270
+            X: =0
+            Y: =0
+      - galPsOvCells:
+          Control: Gallery@2.15.0
+          Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
+          Properties:
+            BorderThickness: =0
+            Height: =Parent.TemplateHeight
+            Items: |-
+              =ForAll(psYears As y, {FY: y.FY, EmpId: ThisItem.ID})
+            OnSelect: |-
+              =Set(psOvPick, ThisItem.FY);
+              Select(Parent)
+            TemplatePadding: =3
+            TemplateSize: =Parent.TemplateHeight - 6
+            Width: =Parent.TemplateWidth - 280
+            WrapCount: =5
+            X: =280
+            Y: =0
+          Children:
+            - lblPsOvCell:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =uiInk
+                  Fill: |-
+                    =With(
+                        {r: LookUp(psAllStatus, Employee.Id = ThisItem.EmpId && Year(Date) = ThisItem.FY)},
+                        If(
+                            IsBlank(r), RGBA(0, 0, 0, 0.04),
+                            DateDiff(r.'Last Updated', Today(), TimeUnit.Months) > psOutdatedMonths, RGBA(220, 70, 60, 0.16),
+                            RGBA(90, 190, 110, 0.16)
+                        )
+                    )
+                  FontWeight: =FontWeight.Semibold
+                  Height: =Parent.TemplateHeight
+                  OnSelect: =Select(Parent)
+                  Size: =10
+                  Text: |-
+                    =With(
+                        {r: LookUp(psAllStatus, Employee.Id = ThisItem.EmpId && Year(Date) = ThisItem.FY)},
+                        If(
+                            IsBlank(r), "—",
+                            Substitute(r.RegionalGrade.Value, "(MEA) ", "") &
+                            If(r.Promotion, "  P", "") & If(r.Resignation, "  R", "") &
+                            If(r.Mobility, "  M", "") & If(r.Succession, "  S", "")
+                        )
+                    )
+                  Width: =Parent.TemplateWidth
+                  X: =0
+                  Y: =0

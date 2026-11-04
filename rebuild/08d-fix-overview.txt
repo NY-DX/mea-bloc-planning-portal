@@ -1,0 +1,12 @@
+// Fix for the overview: Studio pasted the row cells next to the gallery instead of inside it
+// (that is why they show red "ThisItem isn't recognized" errors).
+// The new version is ONE paste: the employee gallery with a small inner gallery of 5 year cells,
+// so nothing has to be pasted into a gallery.
+
+// 1. Delete these controls (all directly inside conPsOverview):
+//      galPsOverview, lblPsOvName, lblPsOvC1, lblPsOvC2, lblPsOvC3, lblPsOvC4, lblPsOvC5
+// 2. Right-click conPsOverview > Paste code:  08c-into-conPsOverview.paste.yaml   (85 lines)
+
+// 3. Planned hires in the list (the piece 7 tag edit was not applied yet):
+// lblPsEmpTag (inside galPsEmployees)  >  Text
+Switch(ThisItem.Kind, "Mobility", "MOBILITY", "Planned", "PLANNED HIRE", "")
