@@ -1,0 +1,149 @@
+// lblBtnSaveAll > OnSelect: save the selected year, then copy the shared settings to every later year.
+// Copied: Biz/Corp, HR Code, Address Code, Regional and Global Grade, HQ, Mobility (+ region and address code).
+// Not copied: Promotion, Resignation, Succession, Remark. Later-year records are overwritten or created.
+Set(psSaveError, "");
+
+// 1. This year's record (same as SAVE)
+IfError(
+    Set(
+        psSaved,
+        If(
+            IsBlank(psRecord),
+            Patch(
+                EmployeeStatusTable,
+                Defaults(EmployeeStatusTable),
+                {
+                    Employee: {
+                        '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                        Id: psSelected.ID,
+                        Value: psSelected.FullName
+                    },
+                    Date: Date(psFY, 4, 1),
+                    Title: GUID(),
+                    EmploymentType: cmbPsBizCorp.Selected,
+                    Division: cmbPsHRCode.Selected,
+                    AddressCode: cmbPsAddress.Selected,
+                    RegionalGrade: cmbPsRegional.Selected,
+                    GlobalGrade: {Value: lblPsGlobalValue.Text},
+                    Promotion: tglPsPromotion.Checked,
+                    HQEmployment: tglPsHQ.Checked,
+                    Resignation: tglPsResignation.Checked,
+                    Succession: tglPsSuccession.Checked,
+                    Mobility: tglPsMobility.Checked,
+                    Remark: txtPsRemark.Value,
+                    'Last Updated': Now()
+                }
+            ),
+            Patch(
+                EmployeeStatusTable,
+                psRecord,
+                {
+                    EmploymentType: cmbPsBizCorp.Selected,
+                    Division: cmbPsHRCode.Selected,
+                    AddressCode: cmbPsAddress.Selected,
+                    RegionalGrade: cmbPsRegional.Selected,
+                    GlobalGrade: {Value: lblPsGlobalValue.Text},
+                    Promotion: tglPsPromotion.Checked,
+                    HQEmployment: tglPsHQ.Checked,
+                    Resignation: tglPsResignation.Checked,
+                    Succession: tglPsSuccession.Checked,
+                    Mobility: tglPsMobility.Checked,
+                    Remark: txtPsRemark.Value,
+                    'Last Updated': Now()
+                }
+            )
+        )
+    );
+    If(
+        tglPsMobility.Checked,
+        Patch(EmployeeStatusTable, psSaved, {MobilityRegion: cmbPsMobRegion.Selected, MobilityAC: cmbPsMobAC.Selected})
+    ),
+    Set(psSaveError, FirstError.Message)
+);
+
+// 2. Every later planning year
+If(
+    IsBlank(psSaveError),
+    IfError(
+        ForAll(
+            Filter(psYears, FY > psFY) As yr,
+            With(
+                {existing: LookUp(psStatus, Year(Date) = yr.FY)},
+                With(
+                    {
+                        saved: If(
+                            IsBlank(existing),
+                            Patch(
+                                EmployeeStatusTable,
+                                Defaults(EmployeeStatusTable),
+                                {
+                                    Employee: {
+                                        '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                        Id: psSelected.ID,
+                                        Value: psSelected.FullName
+                                    },
+                                    Date: yr.StartDate,
+                                    Title: GUID(),
+                                    EmploymentType: cmbPsBizCorp.Selected,
+                                    Division: cmbPsHRCode.Selected,
+                                    AddressCode: cmbPsAddress.Selected,
+                                    RegionalGrade: cmbPsRegional.Selected,
+                                    GlobalGrade: {Value: lblPsGlobalValue.Text},
+                                    Promotion: false,
+                                    HQEmployment: tglPsHQ.Checked,
+                                    Resignation: false,
+                                    Succession: false,
+                                    Mobility: tglPsMobility.Checked,
+                                    'Last Updated': Now()
+                                }
+                            ),
+                            Patch(
+                                EmployeeStatusTable,
+                                existing,
+                                {
+                                    EmploymentType: cmbPsBizCorp.Selected,
+                                    Division: cmbPsHRCode.Selected,
+                                    AddressCode: cmbPsAddress.Selected,
+                                    RegionalGrade: cmbPsRegional.Selected,
+                                    GlobalGrade: {Value: lblPsGlobalValue.Text},
+                                    HQEmployment: tglPsHQ.Checked,
+                                    Mobility: tglPsMobility.Checked,
+                                    'Last Updated': Now()
+                                }
+                            )
+                        )
+                    },
+                    If(
+                        tglPsMobility.Checked,
+                        Patch(EmployeeStatusTable, saved, {MobilityRegion: cmbPsMobRegion.Selected, MobilityAC: cmbPsMobAC.Selected})
+                    )
+                )
+            )
+        ),
+        Set(psSaveError, "later years: " & FirstError.Message)
+    )
+);
+
+If(
+    IsBlank(psSaveError),
+    Notify(
+        "Saved FY" & psFY & " for " & psSelected.FullName & " and copied it to FY" & (psFY + 1) & "–FY" & Max(psYears, FY) & ".",
+        NotificationType.Success
+    ),
+    Notify("Save All stopped: " & psSaveError, NotificationType.Error)
+);
+
+// 3. Reload this employee's records so the year tiles and form show what was saved
+ClearCollect(psStatus, Filter(EmployeeStatusTable, Employee.Id = psSelected.ID));
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false);
+// Promotion suggests the grade one step above last year's regional grade
+Set(
+    psPromoGrade,
+    With(
+        {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+        If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+    )
+)

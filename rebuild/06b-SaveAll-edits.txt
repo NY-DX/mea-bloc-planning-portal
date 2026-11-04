@@ -1,0 +1,17 @@
+// Save All: set these by hand (select the control, choose the property, paste the formula).
+
+// lblBtnSaveAll  >  DisplayMode
+If(
+    IsBlank(psSelected) || psLocked || !IsBlank(lblPsMissing.Text) || tglPsResignation.Checked ||
+        psFY = Max(psYears, FY),
+    DisplayMode.Disabled,
+    DisplayMode.Edit
+)
+
+// lblBtnSaveAll  >  Color
+If(Self.DisplayMode = DisplayMode.Edit, uiGold, uiMuted)
+
+// lblBtnSaveAll  >  BorderColor
+If(Self.DisplayMode = DisplayMode.Edit, uiGold, uiMuted)
+
+// lblBtnSaveAll  >  OnSelect   -> paste the whole file 06c-lblBtnSaveAll.OnSelect.fx.txt

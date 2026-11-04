@@ -1,0 +1,29 @@
+// Promotion toggle: ON moves Regional Grade one step up, OFF one step down.
+// It only reacts when the user flips it: when a record loads, the toggle equals the
+// saved value, so nothing changes. Flipping it back restores the saved/pre-filled grade.
+
+// tglPsPromotion  >  OnCheck
+If(
+    Self.Checked <> Coalesce(psRecord.Promotion, false),
+    Set(psRegionalOverride, With(
+        {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = cmbPsRegional.Selected.Value).N},
+        If(IsBlank(pos), Blank(), Index(gradeLadder, Min(pos + 1, CountRows(gradeLadder))).Value)
+    )),
+    Set(psRegionalOverride, Blank())
+)
+
+// tglPsPromotion  >  OnUncheck
+If(
+    Self.Checked <> Coalesce(psRecord.Promotion, false),
+    Set(psRegionalOverride, With(
+        {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = cmbPsRegional.Selected.Value).N},
+        If(IsBlank(pos), Blank(), Index(gradeLadder, Max(pos - 1, 1)).Value)
+    )),
+    Set(psRegionalOverride, Blank())
+)
+
+// lblPsSecGrade  >  Text       (back to a plain heading)
+"GRADE"
+
+// lblPsSecGrade  >  OnSelect   (clear it)
+false
