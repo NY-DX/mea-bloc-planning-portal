@@ -184,7 +184,7 @@ Screens:
                         PaddingLeft: =16
                         PaddingRight: =16
                         PaddingTop: =16
-                        Width: =320
+                        Width: =330
                       Children:
                         - lblSideTitle:
                             Control: Label@2.5.1
@@ -274,7 +274,7 @@ Screens:
                                     OnSelect: =Select(Parent)
                                     Size: =9
                                     Text: =ThisItem.AddressCode & "  ·  " & ThisItem.EmployeeNo
-                                    Width: =Parent.TemplateWidth - 110
+                                    Width: =Parent.TemplateWidth - 130
                                     X: =14
                                     Y: =32
                               - lblPsEmpTag:
@@ -287,8 +287,8 @@ Screens:
                                     OnSelect: =Select(Parent)
                                     Size: =8
                                     Text: =Switch(ThisItem.Kind, "Mobility", "MOBILITY", "Planned", "PLANNED HIRE", "")
-                                    Width: =80
-                                    X: =Parent.TemplateWidth - 92
+                                    Width: =100
+                                    X: =Parent.TemplateWidth - 110
                                     Y: =32
                               - lblPsEmpLine:
                                   Control: Label@2.5.1
@@ -333,30 +333,7 @@ Screens:
                         PaddingRight: =32
                         PaddingTop: =24
                       Children:
-                        - lblMainTitle:
-                            Control: Label@2.5.1
-                            Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
-                              Color: =uiInk
-                              FontWeight: =FontWeight.Bold
-                              Size: =20
-                              Text: =If(IsBlank(psSelected), "SELECT AN EMPLOYEE", Upper(psSelected.FullName))
-                        - lblMainPlaceholder:
-                            Control: Label@2.5.1
-                            Properties:
-                              AlignInContainer: =AlignInContainer.Stretch
-                              Color: =uiMuted
-                              Height: =24
-                              Size: =12
-                              Text: |-
-                                =If(
-                                    IsBlank(psSelected),
-                                    "Pick someone from the list on the left.",
-                                    psSelected.AddressCode & "  ·  " & psSelected.EmployeeNo &
-                                    If(psSelected.Kind = "Mobility", "  ·  Mobility (assigned to one of your departments)", "")
-                                )
-                              VerticalAlign: =VerticalAlign.Top
-                        - conPsYearBar:
+                        - conPsTopBar:
                             Control: GroupContainer@1.5.0
                             Variant: AutoLayout
                             Properties:
@@ -367,77 +344,41 @@ Screens:
                               LayoutDirection: =LayoutDirection.Horizontal
                               LayoutGap: =16
                               LayoutMinHeight: =72
-                              Visible: =!IsBlank(psSelected)
                             Children:
-                              - lblPsYearCaption:
-                                  Control: Label@2.5.1
+                              - conPsTitleBlock:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
                                   Properties:
-                                    Color: =uiMuted
-                                    FontWeight: =FontWeight.Bold
-                                    Height: =24
-                                    Size: =10
-                                    Text: ="PLANNING YEAR"
-                                    Width: =120
-                              - galPsYears:
-                                  Control: Gallery@2.15.0
-                                  Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
-                                  Properties:
-                                    FillPortions: =0
-                                    Height: =64
-                                    Items: =psYears
-                                    OnSelect: |+
-                                      =// galPsYears  >  OnSelect
-                                      Set(psFY, ThisItem.FY);
-                                      Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
-                                      Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
-                                      Set(psRegionalOverride, Blank());
-                                      Set(psConfirmResign, false);
-                                      // Promotion suggests the grade one step above last year's regional grade
-                                      Set(
-                                          psPromoGrade,
-                                          With(
-                                              {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
-                                              If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
-                                          )
-                                      )
-                                    TemplateFill: =If(ThisItem.FY = psFY, RGBA(212, 160, 23, 0.18), RGBA(0, 0, 0, 0.04))
-                                    TemplatePadding: =4
-                                    TemplateSize: =64
-                                    Width: =650
-                                    WrapCount: =5
+                                    DropShadow: =DropShadow.None
+                                    Height: =76
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =2
+                                    LayoutJustifyContent: =LayoutJustifyContent.Center
+                                    LayoutMinHeight: =76
                                   Children:
-                                    - lblPsFYText:
+                                    - lblMainTitle:
                                         Control: Label@2.5.1
                                         Properties:
-                                          Align: =Align.Center
-                                          Color: =If(ThisItem.FY = psFY, uiGold, uiInk)
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =uiInk
                                           FontWeight: =FontWeight.Bold
-                                          Height: =28
-                                          OnSelect: =Select(Parent)
-                                          Size: =14
-                                          Text: =Text(ThisItem.FY)
-                                          Width: =Parent.TemplateWidth
-                                          Y: =6
-                                    - lblPsFYState:
+                                          Height: =36
+                                          Size: =20
+                                          Text: =If(IsBlank(psSelected), "SELECT AN EMPLOYEE", Upper(psSelected.FullName))
+                                    - lblMainPlaceholder:
                                         Control: Label@2.5.1
                                         Properties:
-                                          Align: =Align.Center
-                                          Color: =Switch(Self.Text, "NO DATA", uiMuted, "OUTDATED", uiDanger, uiOk)
-                                          FontWeight: =FontWeight.Bold
-                                          Height: =18
-                                          OnSelect: =Select(Parent)
-                                          Size: =8
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Color: =uiMuted
+                                          Height: =22
+                                          Size: =11
                                           Text: |-
-                                            =With(
-                                                {rec: LookUp(psStatus, Year(Date) = ThisItem.FY)},
-                                                If(
-                                                    IsBlank(rec), "NO DATA",
-                                                    DateDiff(rec.'Last Updated', Today(), TimeUnit.Months) > psOutdatedMonths, "OUTDATED",
-                                                    "UP TO DATE"
-                                                )
+                                            =If(
+                                                IsBlank(psSelected),
+                                                "Pick someone from the list on the left.",
+                                                psSelected.AddressCode & "  ·  " & psSelected.EmployeeNo &
+                                                Switch(psSelected.Kind, "Mobility", "  ·  Mobility (assigned to one of your departments)", "Planned", "  ·  Planned hire", "")
                                             )
-                                          Width: =Parent.TemplateWidth
-                                          Y: =36
                               - lblPsRemoveHire:
                                   Control: Label@2.5.1
                                   Properties:
@@ -448,10 +389,10 @@ Screens:
                                     FontWeight: =FontWeight.Bold
                                     Height: =36
                                     OnSelect: |-
-                                      =// lblPsRemoveHire  >  OnSelect
-                                      If(
+                                      =If(
                                           !psConfirmRemove,
                                           Set(psConfirmRemove, true),
+
                                           Set(psConfirmRemove, false);
                                           Set(psHireError, "");
                                           IfError(
@@ -471,23 +412,78 @@ Screens:
                                       )
                                     Size: =9
                                     Text: =If(psConfirmRemove, "CLICK AGAIN TO REMOVE", "REMOVE PLANNED HIRE")
-                                    Visible: =psSelected.Kind = "Planned"
-                                    Width: =190
-                              - lblPsStartFY_1:
-                                  Control: Label@2.5.1
+                                    Visible: =!IsBlank(psSelected) && psSelected.Kind = "Planned"
+                                    Width: =170
+                              - galPsYears:
+                                  Control: Gallery@2.15.0
+                                  Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
                                   Properties:
-                                    Text: |-
-                                      =// Fiscal year in which a planned hire starts (blank for real employees)
-                                      If(psSelected.Kind = "Planned" && StartsWith(psSelected.EmployeeNo, "TBH FY"), Right(psSelected.EmployeeNo, 4), "")
-                                    Visible: =false
-                                    Width: =0
+                                    FillPortions: =0
+                                    Height: =64
+                                    Items: =psYears
+                                    OnSelect: |-
+                                      =Set(psFY, ThisItem.FY);
+                                      Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+                                      Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+                                      Set(psRegionalOverride, Blank());
+                                      Set(psConfirmResign, false);
+                                      // Promotion suggests the grade one step above last year's regional grade
+                                      Set(
+                                          psPromoGrade,
+                                          With(
+                                              {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+                                              If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+                                          )
+                                      );
+                                    TemplateFill: =If(ThisItem.FY = psFY, RGBA(212, 160, 23, 0.18), RGBA(0, 0, 0, 0.04))
+                                    TemplatePadding: =3
+                                    TemplateSize: =64
+                                    Visible: =!IsBlank(psSelected)
+                                    Width: =490
+                                    WrapCount: =5
+                                  Children:
+                                    - lblPsFYText:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =If(ThisItem.FY = psFY, uiGold, uiInk)
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =28
+                                          OnSelect: =Select(Parent)
+                                          Size: =14
+                                          Text: =Text(ThisItem.FY)
+                                          Width: =Parent.TemplateWidth
+                                          Y: =6
+                                    - lblPsFYState:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =Switch(Self.Text, "NO DATA", uiMuted, "AFTER RESIGNATION", uiMuted, "BEFORE START", uiMuted, "RESIGNS", uiGold, "OUTDATED", uiDanger, uiOk)
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          OnSelect: =Select(Parent)
+                                          Size: =7
+                                          Text: |-
+                                            =With(
+                                                {rec: LookUp(psStatus, Year(Date) = ThisItem.FY), resignFY: lblPsResignFY.Text, startFY: lblPsStartFY.Text},
+                                                If(
+                                                    !IsBlank(startFY) && ThisItem.FY < Value(startFY), "BEFORE START",
+                                                    !IsBlank(resignFY) && ThisItem.FY > Value(resignFY), "AFTER RESIGNATION",
+                                                    !IsBlank(rec) && rec.Resignation, "RESIGNS",
+                                                    IsBlank(rec), "NO DATA",
+                                                    DateDiff(rec.'Last Updated', Today(), TimeUnit.Months) > psOutdatedMonths, "OUTDATED",
+                                                    "UP TO DATE"
+                                                )
+                                            )
+                                          Width: =Parent.TemplateWidth
+                                          Y: =36
                         - conPsForm:
                             Control: GroupContainer@1.5.0
                             Variant: AutoLayout
                             Properties:
                               DropShadow: =DropShadow.None
                               LayoutDirection: =LayoutDirection.Vertical
-                              LayoutGap: =10
+                              LayoutGap: =4
                               LayoutOverflowY: =LayoutOverflow.Scroll
                               Visible: =!IsBlank(psSelected)
                             Children:
@@ -978,11 +974,16 @@ Screens:
                         Color: =uiGold
                         FontWeight: =FontWeight.Bold
                         OnSelect: |-
-                          =// lblBtnMenu  >  OnSelect   (OVERVIEW)
+                          =// 4. lblBtnMenu  >  OnSelect   (OVERVIEW)
+                          //    The checker could not send Text(emp.ID) to SharePoint inside ForAll; work out the
+                          //    text first so the filter compares the column with a plain value.
                           Clear(psAllStatus);
                           ForAll(
                               psEmployees As emp,
-                              Collect(psAllStatus, Filter(EmployeeStatusTable, Employee.Value = Text(emp.ID)))
+                              With(
+                                  {ref: Text(emp.ID)},
+                                  Collect(psAllStatus, Filter(EmployeeStatusTable, Employee.Value = ref))
+                              )
                           );
                           Set(psOvPick, 0);
                           Set(psShowOverview, true)
@@ -1657,8 +1658,19 @@ Screens:
                         Items: |-
                           =ForAll(psYears As y, {FY: y.FY, EmpId: ThisItem.ID})
                         OnSelect: |-
-                          =Set(psOvPick, ThisItem.FY);
-                          Select(Parent)
+                          =// 3. galPsOvCells (the small gallery inside each overview row)  >  OnSelect
+                          //    The checker reports a HIGH "Select cycle" here. This version opens the employee/year
+                          //    directly instead of selecting the parent gallery.
+                          Set(psSelected, LookUp(psEmployees, ID = ThisItem.EmpId));
+                          Set(psLocked, psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
+                          Set(psConfirmRemove, false);
+                          ClearCollect(psStatus, Filter(psAllStatus, Employee.Id = ThisItem.EmpId));
+                          Set(psFY, ThisItem.FY);
+                          Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+                          Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+                          Set(psRegionalOverride, Blank());
+                          Set(psConfirmResign, false);
+                          Set(psShowOverview, false)
                         TemplatePadding: =3
                         TemplateSize: =Parent.TemplateHeight - 6
                         Width: =Parent.TemplateWidth - 280
