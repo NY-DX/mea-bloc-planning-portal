@@ -1,0 +1,12 @@
+- lblPsPromoApply:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiGold
+      FillPortions: =0
+      FontWeight: =FontWeight.Semibold
+      Height: =18
+      OnSelect: =Set(psRegionalOverride, psPromoGrade)
+      Size: =9
+      Text: ="APPLY " & psPromoGrade & " (one step above FY" & (psFY - 1) & ")"
+      Visible: =tglPsPromotion.Checked && !IsBlank(psPromoGrade) && cmbPsRegional.Selected.Value <> psPromoGrade

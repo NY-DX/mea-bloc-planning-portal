@@ -1,0 +1,95 @@
+// lblBtnSave > OnSelect: save the selected employee's record for the selected year.
+// Resignation deletes the employee's later years, so the first click only asks to confirm.
+If(
+    tglPsResignation.Checked && !psConfirmResign && CountRows(Filter(psStatus, Year(Date) > psFY)) > 0,
+    Set(psConfirmResign, true),
+
+    Set(psConfirmResign, false);
+    Set(psSaveError, "");
+
+    // 1. Write this year's record, creating it if it does not exist yet
+    IfError(
+        Set(
+            psSaved,
+            If(
+                IsBlank(psRecord),
+                Patch(
+                    EmployeeStatusTable,
+                    Defaults(EmployeeStatusTable),
+                    {
+                        Employee: {
+                            '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                            Id: psSelected.ID,
+                            Value: psSelected.FullName
+                        },
+                        Date: Date(psFY, 4, 1),
+                        Title: GUID(),
+                        EmploymentType: cmbPsBizCorp.Selected,
+                        Division: cmbPsHRCode.Selected,
+                        AddressCode: cmbPsAddress.Selected,
+                        RegionalGrade: cmbPsRegional.Selected,
+                        GlobalGrade: {Value: lblPsGlobalValue.Text},
+                        Promotion: tglPsPromotion.Checked,
+                        HQEmployment: tglPsHQ.Checked,
+                        Resignation: tglPsResignation.Checked,
+                        Succession: tglPsSuccession.Checked,
+                        Mobility: tglPsMobility.Checked,
+                        Remark: txtPsRemark.Value,
+                        'Last Updated': Now()
+                    }
+                ),
+                Patch(
+                    EmployeeStatusTable,
+                    psRecord,
+                    {
+                        EmploymentType: cmbPsBizCorp.Selected,
+                        Division: cmbPsHRCode.Selected,
+                        AddressCode: cmbPsAddress.Selected,
+                        RegionalGrade: cmbPsRegional.Selected,
+                        GlobalGrade: {Value: lblPsGlobalValue.Text},
+                        Promotion: tglPsPromotion.Checked,
+                        HQEmployment: tglPsHQ.Checked,
+                        Resignation: tglPsResignation.Checked,
+                        Succession: tglPsSuccession.Checked,
+                        Mobility: tglPsMobility.Checked,
+                        Remark: txtPsRemark.Value,
+                        'Last Updated': Now()
+                    }
+                )
+            )
+        ),
+        Set(psSaveError, FirstError.Message)
+    );
+
+    If(
+        !IsBlank(psSaveError),
+        Notify("Could not save FY" & psFY & ": " & psSaveError, NotificationType.Error),
+
+        // 2. Mobility details are written only when the employee is on mobility
+        If(
+            tglPsMobility.Checked,
+            Patch(EmployeeStatusTable, psSaved, {MobilityRegion: cmbPsMobRegion.Selected, MobilityAC: cmbPsMobAC.Selected})
+        );
+        // 3. Resignation removes the employee's later years
+        If(
+            tglPsResignation.Checked,
+            RemoveIf(EmployeeStatusTable, Employee.Id = psSelected.ID && Date > Date(psFY, 4, 1))
+        );
+        Notify("Saved FY" & psFY & " for " & psSelected.FullName & ".", NotificationType.Success)
+    );
+
+    // 4. Reload this employee's records so the year tiles and form show what was saved
+    ClearCollect(psStatus, Filter(EmployeeStatusTable, Employee.Id = psSelected.ID));
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false);
+// Promotion suggests the grade one step above last year's regional grade
+Set(
+    psPromoGrade,
+    With(
+        {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+        If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+    )
+)
+)

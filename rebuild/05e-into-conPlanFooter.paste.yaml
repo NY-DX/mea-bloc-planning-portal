@@ -1,0 +1,22 @@
+- lblPsMissing:
+    Control: Label@2.5.1
+    Properties:
+      FillPortions: =0
+      Text: |-
+        =Concat(
+            Filter(
+                Table(
+                    {Name: "Biz/Corp", Ok: !IsBlank(cmbPsBizCorp.Selected.Value)},
+                    {Name: "HR Code", Ok: !IsBlank(cmbPsHRCode.Selected.Value)},
+                    {Name: "Address Code", Ok: !IsBlank(cmbPsAddress.Selected.Value)},
+                    {Name: "Regional Grade", Ok: !IsBlank(cmbPsRegional.Selected.Value)},
+                    {Name: "Mobility Region", Ok: !tglPsMobility.Checked || !IsBlank(cmbPsMobRegion.Selected.Value)},
+                    {Name: "Mobility Address Code", Ok: !tglPsMobility.Checked || !IsBlank(cmbPsMobAC.Selected.Value)}
+                ),
+                !Ok
+            ),
+            Name,
+            ", "
+        )
+      Visible: =false
+      Width: =0

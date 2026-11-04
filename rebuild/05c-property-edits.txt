@@ -1,0 +1,66 @@
+// Set these by hand (select the control, choose the property, paste the formula).
+
+// galPsEmployees  >  OnSelect
+Set(psSelected, ThisItem);
+Set(psLocked, ThisItem.Kind = "Mobility" && ThisItem.AddressCode <> "Outside");
+ClearCollect(psStatus, Filter(EmployeeStatusTable, Employee.Id = ThisItem.ID));
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false);
+// Promotion suggests the grade one step above last year's regional grade
+Set(
+    psPromoGrade,
+    With(
+        {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+        If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+    )
+)
+
+// galPsYears  >  OnSelect
+Set(psFY, ThisItem.FY);
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false);
+// Promotion suggests the grade one step above last year's regional grade
+Set(
+    psPromoGrade,
+    With(
+        {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+        If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+    )
+)
+
+// cmbPsRegional  >  DefaultSelectedItems   (the APPLY link can override it)
+Filter(
+    Choices([@EmployeeStatusTable].RegionalGrade),
+    Value = Coalesce(psRegionalOverride, psRecord.RegionalGrade.Value, psPrev.RegionalGrade.Value)
+)
+
+// conPsRowGrade  >  Height  and  LayoutMinHeight   (room for the APPLY link)
+84
+
+// lblFooterStatus  >  Text
+If(
+    IsBlank(psSelected), "",
+    psLocked, "Read-only: this mobility employee is planned by their home department.",
+    !IsBlank(lblPsMissing.Text), "Missing: " & lblPsMissing.Text,
+    psConfirmResign, "Resignation deletes FY" & (psFY + 1) & " onwards for this employee. Click CONFIRM SAVE to continue.",
+    IsBlank(psRecord), "FY" & psFY & " will be created when you save.",
+    "FY" & psFY & " will be updated when you save."
+)
+
+// lblFooterStatus  >  Color
+If(!IsBlank(lblPsMissing.Text) || psConfirmResign, uiDanger, uiWhite)
+
+// lblBtnSave  >  DisplayMode
+If(IsBlank(psSelected) || psLocked || !IsBlank(lblPsMissing.Text), DisplayMode.Disabled, DisplayMode.Edit)
+
+// lblBtnSave  >  Fill
+If(Self.DisplayMode = DisplayMode.Edit, uiGold, uiGoldDim)
+
+// lblBtnSave  >  Text
+If(psConfirmResign, "CONFIRM SAVE", "SAVE")
+
+// lblBtnSave  >  OnSelect   -> paste the whole file 05d-lblBtnSave.OnSelect.fx.txt
