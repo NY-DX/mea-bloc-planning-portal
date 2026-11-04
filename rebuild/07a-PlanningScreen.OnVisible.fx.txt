@@ -1,0 +1,101 @@
+// PlanningScreen.OnVisible (replaces the piece 5 version).
+// Everything this screen creates is prefixed "ps", so it never depends on the old screens.
+
+// Fiscal years start on 1 April. Planning covers the next five fiscal years.
+Set(psFiscalBase, If(Month(Today()) >= 4, Year(Today()), Year(Today()) - 1));
+ClearCollect(
+    psYears,
+    ForAll(
+        Sequence(5, 1) As n,
+        {FY: psFiscalBase + n.Value, StartDate: Date(psFiscalBase + n.Value, 4, 1)}
+    )
+);
+If(IsBlank(psFY) || !(psFY in psYears.FY), Set(psFY, First(psYears).FY));
+// A record is "outdated" when it was last updated more than this many months ago.
+Set(psOutdatedMonths, 10);
+
+// The current General Manager's departments
+Set(psUserEmail, Lower(User().Email));
+ClearCollect(
+    psDepts,
+    Filter(DepartmentTable, Lower(GeneralManager.Email) = psUserEmail)
+);
+
+// Direct employees and planned hires: home address code is one of the GM's departments
+Clear(psEmployees);
+ForAll(
+    psDepts As dept,
+    Collect(
+        psEmployees,
+        ForAll(
+            Filter(EmployeeTable, AddressCode.Value = dept.AddressCode) As emp,
+            {
+                ID: emp.ID,
+                FullName: Trim(emp.'FirstName ' & " " & emp.'MiddleName ' & " " & emp.'LastName '),
+                AddressCode: emp.AddressCode.Value,
+                EmployeeNo: emp.'Employee ID',
+                Kind: If(emp.PlannedHire, "Planned", "Direct")
+            }
+        )
+    )
+);
+
+// Mobility employees: a status record (any year) assigns them to one of the GM's departments.
+// Matched by employee ID (the old screen matched by last name).
+Clear(psMobilityIds);
+ForAll(
+    psDepts As dept,
+    Collect(
+        psMobilityIds,
+        ForAll(
+            Filter(EmployeeStatusTable, MobilityAC.Value = dept.AddressCode) As st,
+            {EmpId: st.Employee.Id}
+        )
+    )
+);
+ForAll(
+    Filter(Distinct(psMobilityIds, EmpId), !(Value in psEmployees.ID)) As mob,
+    With(
+        {emp: LookUp(EmployeeTable, ID = mob.Value)},
+        If(
+            !IsBlank(emp),
+            Collect(
+                psEmployees,
+                {
+                    ID: emp.ID,
+                    FullName: Trim(emp.'FirstName ' & " " & emp.'MiddleName ' & " " & emp.'LastName '),
+                    AddressCode: emp.AddressCode.Value,
+                    EmployeeNo: emp.'Employee ID',
+                    Kind: "Mobility"
+                }
+            )
+        )
+    )
+);
+
+// Keep the selection only if that employee is still in the list, and reload their records
+If(!(psSelected.ID in psEmployees.ID), Set(psSelected, Blank()));
+If(
+    IsBlank(psSelected),
+    Clear(psStatus),
+    ClearCollect(psStatus, Filter(EmployeeStatusTable, Employee.Id = psSelected.ID))
+);
+
+// Mobility employees are read-only unless their home address code is "Outside" (same rule as before)
+Set(psLocked, !IsBlank(psSelected) && psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
+// The record shown in the form, and the previous year's record used to pre-fill a new one
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false);
+// Promotion suggests the grade one step above last year's regional grade
+Set(
+    psPromoGrade,
+    With(
+        {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+        If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+    )
+);
+Set(psConfirmRemove, false);
+Set(psShowHire, false);
+Set(psShowOverview, false);

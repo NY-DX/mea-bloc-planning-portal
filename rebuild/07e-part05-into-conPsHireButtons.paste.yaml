@@ -1,0 +1,72 @@
+- lblPsHireCancel:
+    Control: Label@2.5.1
+    Properties:
+      Align: =Align.Center
+      BorderColor: =uiGold
+      BorderThickness: =1
+      Color: =uiGold
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =40
+      OnSelect: =Set(psShowHire, false)
+      Size: =11
+      Text: ="CANCEL"
+      Width: =150
+- lblPsHireCreate:
+    Control: Label@2.5.1
+    Properties:
+      Align: =Align.Center
+      Color: =uiInk
+      DisplayMode: =If(IsBlank(Trim(txtPsHireName.Value)) || IsBlank(cmbPsHireDept.Selected) || IsBlank(cmbPsHireYear.Selected), DisplayMode.Disabled, DisplayMode.Edit)
+      Fill: =If(Self.DisplayMode = DisplayMode.Edit, uiGold, uiGoldDim)
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =40
+      OnSelect: |-
+        =Set(psHireError, "");
+        IfError(
+            Set(
+                psNewHire,
+                Patch(
+                    EmployeeTable,
+                    Defaults(EmployeeTable),
+                    {
+                        Title: Trim(txtPsHireName.Value),
+                        'FirstName ': Trim(txtPsHireName.Value),
+                        'LastName ': "",
+                        'Employee ID': "TBH FY" & cmbPsHireYear.Selected.Value,
+                        AddressCode: cmbPsHireDept.Selected,
+                        PlannedHire: true
+                    }
+                )
+            ),
+            Set(psHireError, FirstError.Message)
+        );
+        If(
+            IsBlank(psHireError),
+            Collect(
+                psEmployees,
+                {
+                    ID: psNewHire.ID,
+                    FullName: Trim(txtPsHireName.Value),
+                    AddressCode: cmbPsHireDept.Selected.Value,
+                    EmployeeNo: "TBH FY" & cmbPsHireYear.Selected.Value,
+                    Kind: "Planned"
+                }
+            );
+            Set(psSelected, LookUp(psEmployees, ID = psNewHire.ID));
+            Set(psLocked, false);
+            Set(psConfirmRemove, false);
+            Clear(psStatus);
+            Set(psFY, Value(cmbPsHireYear.Selected.Value));
+            Set(psRecord, Blank());
+            Set(psPrev, Blank());
+            Set(psRegionalOverride, Blank());
+            Set(psConfirmResign, false);
+            Set(psShowHire, false);
+            Notify("Planned hire created. Fill in FY" & psFY & " and press SAVE (or SAVE ALL for the later years).", NotificationType.Success),
+            Notify("Could not create the planned hire: " & psHireError, NotificationType.Error)
+        )
+      Size: =11
+      Text: ="CREATE"
+      Width: =150

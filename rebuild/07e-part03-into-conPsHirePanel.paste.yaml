@@ -1,0 +1,74 @@
+- lblPsHireTitle:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiGold
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =30
+      Size: =16
+      Text: ="ADD PLANNED HIRE"
+- lblPsHireHelp:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiMuted
+      FillPortions: =0
+      Height: =40
+      Size: =10
+      Text: ="A placeholder for someone you plan to hire. After creating it, plan their years with the form and SAVE / SAVE ALL."
+- lblPsHireNameCap:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiMuted
+      FillPortions: =0
+      FontWeight: =FontWeight.Semibold
+      Height: =18
+      Size: =9
+      Text: ="NAME OR ROLE"
+- txtPsHireName:
+    Control: TextInput@0.0.54
+    Properties:
+      AccessibleLabel: ="Name or role"
+      AlignInContainer: =AlignInContainer.Stretch
+      FillPortions: =0
+      Height: =36
+      Placeholder: ="e.g. TBH - Senior Engineer"
+- lblPsHireDeptCap:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiMuted
+      FillPortions: =0
+      FontWeight: =FontWeight.Semibold
+      Height: =18
+      Size: =9
+      Text: ="DEPARTMENT (ADDRESS CODE)"
+- cmbPsHireDept:
+    Control: ComboBox@0.0.51
+    Properties:
+      AccessibleLabel: ="Department"
+      AlignInContainer: =AlignInContainer.Stretch
+      FillPortions: =0
+      Height: =36
+      Items: =Filter(Choices([@EmployeeTable].AddressCode), Value in psDepts.AddressCode)
+- lblPsHireYearCap:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiMuted
+      FillPortions: =0
+      FontWeight: =FontWeight.Semibold
+      Height: =18
+      Size: =9
+      Text: ="STARTS IN FISCAL YEAR"
+- cmbPsHireYear:
+    Control: ComboBox@0.0.51
+    Properties:
+      AccessibleLabel: ="Start year"
+      AlignInContainer: =AlignInContainer.Stretch
+      DefaultSelectedItems: =[Text(psFY)]
+      FillPortions: =0
+      Height: =36
+      Items: =ForAll(psYears, Text(FY))

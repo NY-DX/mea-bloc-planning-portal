@@ -1,0 +1,83 @@
+// Piece 7: planned hires. Set these by hand, then do the pastes listed at the bottom.
+
+// PlanningScreen  >  OnVisible   -> replace with 07a-PlanningScreen.OnVisible.fx.txt
+
+// galPsEmployees  >  OnSelect
+Set(psSelected, ThisItem);
+Set(psLocked, ThisItem.Kind = "Mobility" && ThisItem.AddressCode <> "Outside");
+Set(psConfirmRemove, false);
+ClearCollect(psStatus, Filter(EmployeeStatusTable, Employee.Id = ThisItem.ID));
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false);
+// Promotion suggests the grade one step above last year's regional grade
+Set(
+    psPromoGrade,
+    With(
+        {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+        If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+    )
+);
+
+// lblPsEmpTag (inside galPsEmployees)  >  Text
+Switch(ThisItem.Kind, "Mobility", "MOBILITY", "Planned", "PLANNED HIRE", "")
+
+// lblBtnSave  >  DisplayMode
+If(
+    IsBlank(psSelected) || psLocked || !IsBlank(lblPsMissing.Text) ||
+        (!IsBlank(lblPsResignFY.Text) && psFY > Value(lblPsResignFY.Text)) ||
+        (!IsBlank(lblPsStartFY.Text) && psFY < Value(lblPsStartFY.Text)),
+    DisplayMode.Disabled,
+    DisplayMode.Edit
+)
+
+// lblBtnSaveAll  >  DisplayMode
+If(
+    IsBlank(psSelected) || psLocked || !IsBlank(lblPsMissing.Text) || tglPsResignation.Checked ||
+        psFY = Max(psYears, FY) ||
+        (!IsBlank(lblPsResignFY.Text) && psFY >= Value(lblPsResignFY.Text)) ||
+        (!IsBlank(lblPsStartFY.Text) && psFY < Value(lblPsStartFY.Text)),
+    DisplayMode.Disabled,
+    DisplayMode.Edit
+)
+
+// lblFooterStatus  >  Text
+If(
+    IsBlank(psSelected), "",
+    psLocked, "Read-only: this mobility employee is planned by their home department.",
+    !IsBlank(lblPsStartFY.Text) && psFY < Value(lblPsStartFY.Text),
+        "Planned hire starts in FY" & lblPsStartFY.Text & ": choose that year or later.",
+    !IsBlank(lblPsResignFY.Text) && psFY > Value(lblPsResignFY.Text),
+        "Resigns in FY" & lblPsResignFY.Text & ": no planning after that year.",
+    !IsBlank(lblPsMissing.Text), "Missing: " & lblPsMissing.Text,
+    psConfirmResign, "Resignation deletes FY" & (psFY + 1) & " onwards for this employee. Click CONFIRM SAVE to continue.",
+    IsBlank(psRecord), "FY" & psFY & " will be created when you save.",
+    "FY" & psFY & " will be updated when you save."
+)
+
+// lblPsFYState (inside galPsYears)  >  Text
+With(
+    {rec: LookUp(psStatus, Year(Date) = ThisItem.FY), resignFY: lblPsResignFY.Text, startFY: lblPsStartFY.Text},
+    If(
+        !IsBlank(startFY) && ThisItem.FY < Value(startFY), "BEFORE START",
+        !IsBlank(resignFY) && ThisItem.FY > Value(resignFY), "AFTER RESIGNATION",
+        !IsBlank(rec) && rec.Resignation, "RESIGNS",
+        IsBlank(rec), "NO DATA",
+        DateDiff(rec.'Last Updated', Today(), TimeUnit.Months) > psOutdatedMonths, "OUTDATED",
+        "UP TO DATE"
+    )
+)
+
+// lblPsFYState  >  Color
+Switch(Self.Text, "NO DATA", uiMuted, "AFTER RESIGNATION", uiMuted, "BEFORE START", uiMuted, "RESIGNS", uiGold, "OUTDATED", uiDanger, uiOk)
+
+// Pastes (right-click the named container > Paste code), in this order:
+//   07b-part01-into-conPlanSidebar      "+ ADD PLANNED HIRE" button under the list
+//   07c-part01-into-conPlanFooter       hidden helper lblPsStartFY
+//   07d-part01-into-conPsYearBar        "REMOVE PLANNED HIRE" (only shown for planned hires)
+//   07e-part01-into-PlanningScreen      the pop-up (right-click the SCREEN itself)
+//   07e-part02-into-conPsHireOverlay
+//   07e-part03-into-conPsHirePanel
+//   07e-part04-into-conPsHirePanel
+//   07e-part05-into-conPsHireButtons

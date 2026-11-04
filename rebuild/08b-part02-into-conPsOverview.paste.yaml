@@ -1,0 +1,45 @@
+- conPsOvTop:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      DropShadow: =DropShadow.None
+      FillPortions: =0
+      Height: =44
+      LayoutAlignItems: =LayoutAlignItems.Center
+      LayoutDirection: =LayoutDirection.Horizontal
+      LayoutGap: =16
+      LayoutMinHeight: =44
+    Children:
+      - lblPsOvTitle:
+          Control: Label@2.5.1
+          Properties:
+            Color: =uiGold
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =40
+            Size: =18
+            Text: ="OVERVIEW"
+            Width: =160
+      - lblPsOvLegend:
+          Control: Label@2.5.1
+          Properties:
+            Color: =uiMuted
+            FillPortions: =1
+            Height: =40
+            Size: =9
+            Text: ="Regional grade per year  ·  P promotion  ·  R resignation  ·  M mobility  ·  S succession  ·  green up to date, red outdated, grey no data  ·  click a cell to open it"
+      - lblPsOvClose:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =uiGold
+            BorderThickness: =1
+            Color: =uiGold
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =40
+            OnSelect: =Set(psShowOverview, false)
+            Size: =11
+            Text: ="CLOSE"
+            Width: =150

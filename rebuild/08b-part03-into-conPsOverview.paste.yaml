@@ -1,0 +1,73 @@
+- conPsOvHead:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      DropShadow: =DropShadow.None
+      FillPortions: =0
+      Height: =28
+      LayoutDirection: =LayoutDirection.Horizontal
+      LayoutGap: =6
+      LayoutMinHeight: =28
+      PaddingRight: =12
+    Children:
+      - lblPsOvHName:
+          Control: Label@2.5.1
+          Properties:
+            Color: =uiGold
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =10
+            Text: ="EMPLOYEE"
+            Width: =274
+      - lblPsOvH1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =uiGold
+            FillPortions: =1
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =10
+            Text: ="FY" & Index(psYears, 1).FY
+      - lblPsOvH2:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =uiGold
+            FillPortions: =1
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =10
+            Text: ="FY" & Index(psYears, 2).FY
+      - lblPsOvH3:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =uiGold
+            FillPortions: =1
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =10
+            Text: ="FY" & Index(psYears, 3).FY
+      - lblPsOvH4:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =uiGold
+            FillPortions: =1
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =10
+            Text: ="FY" & Index(psYears, 4).FY
+      - lblPsOvH5:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =uiGold
+            FillPortions: =1
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =10
+            Text: ="FY" & Index(psYears, 5).FY

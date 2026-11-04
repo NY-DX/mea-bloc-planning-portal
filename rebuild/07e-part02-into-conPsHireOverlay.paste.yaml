@@ -1,0 +1,15 @@
+- conPsHirePanel:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.Bold
+      Fill: =uiBg
+      FillPortions: =0
+      Height: =420
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =10
+      PaddingBottom: =24
+      PaddingLeft: =28
+      PaddingRight: =28
+      PaddingTop: =24
+      Width: =540

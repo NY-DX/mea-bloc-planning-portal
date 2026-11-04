@@ -1,0 +1,16 @@
+- lblPsAddHire:
+    Control: Label@2.5.1
+    Properties:
+      Align: =Align.Center
+      AlignInContainer: =AlignInContainer.Stretch
+      BorderColor: =uiGold
+      BorderThickness: =1
+      Color: =uiGold
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =36
+      OnSelect: |-
+        =Reset(txtPsHireName);
+        Set(psShowHire, true)
+      Size: =10
+      Text: ="+  ADD PLANNED HIRE"

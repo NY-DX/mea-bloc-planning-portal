@@ -1,0 +1,21 @@
+- galPsOverview:
+    Control: Gallery@2.15.0
+    Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      BorderThickness: =0
+      FillPortions: =1
+      Items: =Sort(psEmployees, Kind & "|" & FullName)
+      OnSelect: |-
+        =Set(psSelected, LookUp(psEmployees, ID = ThisItem.ID));
+        Set(psLocked, psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
+        Set(psConfirmRemove, false);
+        ClearCollect(psStatus, Filter(psAllStatus, Employee.Id = ThisItem.ID));
+        If(!IsBlank(psOvPick), Set(psFY, psOvPick));
+        Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+        Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+        Set(psRegionalOverride, Blank());
+        Set(psConfirmResign, false);
+        Set(psShowOverview, false)
+      TemplateFill: =If(ThisItem.ID = psSelected.ID, RGBA(212, 160, 23, 0.10), RGBA(0, 0, 0, 0))
+      TemplateSize: =44

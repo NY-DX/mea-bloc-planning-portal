@@ -1,0 +1,9 @@
+- lblPsStartFY:
+    Control: Label@2.5.1
+    Properties:
+      FillPortions: =0
+      Text: |-
+        =// Fiscal year in which a planned hire starts (blank for real employees)
+        If(psSelected.Kind = "Planned" && StartsWith(psSelected.EmployeeNo, "TBH FY"), Right(psSelected.EmployeeNo, 4), "")
+      Visible: =false
+      Width: =0

@@ -1,0 +1,13 @@
+- conPsHireButtons:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      DropShadow: =DropShadow.None
+      FillPortions: =0
+      Height: =56
+      LayoutAlignItems: =LayoutAlignItems.End
+      LayoutDirection: =LayoutDirection.Horizontal
+      LayoutGap: =12
+      LayoutJustifyContent: =LayoutJustifyContent.End
+      LayoutMinHeight: =56

@@ -1,0 +1,26 @@
+// Piece 8: overview. MAIN MENU becomes OVERVIEW.
+
+// lblBtnMenu  >  Text
+"OVERVIEW"
+
+// lblBtnMenu  >  OnSelect   (loads every employee's records, then opens the overview)
+Clear(psAllStatus);
+ForAll(
+    psEmployees As emp,
+    Collect(psAllStatus, Filter(EmployeeStatusTable, Employee.Id = emp.ID))
+);
+Set(psOvPick, Blank());
+Set(psShowOverview, true)
+
+// Pastes (right-click the named container > Paste code), in this order:
+//   08b-part01-into-PlanningScreen      (right-click the SCREEN itself)
+//   08b-part02-into-conPsOverview
+//   08b-part03-into-conPsOverview
+//   08b-part04-into-conPsOverview
+//   08b-part05-into-galPsOverview
+//   08b-part06-into-galPsOverview
+//   08b-part07-into-galPsOverview
+
+// Optional, once you are happy: open the app straight on the new screen.
+// App  >  StartScreen
+PlanningScreen

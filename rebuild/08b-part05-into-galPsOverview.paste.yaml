@@ -1,0 +1,80 @@
+- lblPsOvName:
+    Control: Label@2.5.1
+    Properties:
+      Color: =uiInk
+      FontWeight: =FontWeight.Semibold
+      Height: =36
+      OnSelect: |-
+        =Set(psOvPick, Blank());
+        Select(Parent)
+      Size: =11
+      Text: =ThisItem.FullName & If(ThisItem.Kind = "Planned", "  (planned)", If(ThisItem.Kind = "Mobility", "  (mobility)", ""))
+      Width: =270
+      X: =0
+      Y: =4
+- lblPsOvC1:
+    Control: Label@2.5.1
+    Properties:
+      Align: =Align.Center
+      Color: =uiInk
+      Fill: |-
+        =With(
+            {r: LookUp(psAllStatus, Employee.Id = ThisItem.ID && Year(Date) = Index(psYears, 1).FY)},
+            If(
+                IsBlank(r), RGBA(0, 0, 0, 0.04),
+                DateDiff(r.'Last Updated', Today(), TimeUnit.Months) > psOutdatedMonths, RGBA(220, 70, 60, 0.16),
+                RGBA(90, 190, 110, 0.16)
+            )
+        )
+      FontWeight: =FontWeight.Semibold
+      Height: =36
+      OnSelect: |-
+        =Set(psOvPick, Index(psYears, 1).FY);
+        Select(Parent)
+      Size: =10
+      Text: |-
+        =With(
+            {r: LookUp(psAllStatus, Employee.Id = ThisItem.ID && Year(Date) = Index(psYears, 1).FY)},
+            If(
+                IsBlank(r), "—",
+                Substitute(r.RegionalGrade.Value, "(MEA) ", "") &
+                If(r.Promotion, "  P", "") & If(r.Resignation, "  R", "") &
+                If(r.Mobility, "  M", "") & If(r.Succession, "  S", "")
+            )
+        )
+      Width: =(Parent.TemplateWidth - 280) / 5 - 6
+      X: =280 + 0 * ((Parent.TemplateWidth - 280) / 5)
+      Y: =4
+- lblPsOvC2:
+    Control: Label@2.5.1
+    Properties:
+      Align: =Align.Center
+      Color: =uiInk
+      Fill: |-
+        =With(
+            {r: LookUp(psAllStatus, Employee.Id = ThisItem.ID && Year(Date) = Index(psYears, 2).FY)},
+            If(
+                IsBlank(r), RGBA(0, 0, 0, 0.04),
+                DateDiff(r.'Last Updated', Today(), TimeUnit.Months) > psOutdatedMonths, RGBA(220, 70, 60, 0.16),
+                RGBA(90, 190, 110, 0.16)
+            )
+        )
+      FontWeight: =FontWeight.Semibold
+      Height: =36
+      OnSelect: |-
+        =Set(psOvPick, Index(psYears, 2).FY);
+        Select(Parent)
+      Size: =10
+      Text: |-
+        =With(
+            {r: LookUp(psAllStatus, Employee.Id = ThisItem.ID && Year(Date) = Index(psYears, 2).FY)},
+            If(
+                IsBlank(r), "—",
+                Substitute(r.RegionalGrade.Value, "(MEA) ", "") &
+                If(r.Promotion, "  P", "") & If(r.Resignation, "  R", "") &
+                If(r.Mobility, "  M", "") & If(r.Succession, "  S", "")
+            )
+        )
+      Width: =(Parent.TemplateWidth - 280) / 5 - 6
+      X: =280 + 1 * ((Parent.TemplateWidth - 280) / 5)
+      Y: =4

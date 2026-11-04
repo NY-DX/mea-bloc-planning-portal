@@ -1,0 +1,36 @@
+- lblPsRemoveHire:
+    Control: Label@2.5.1
+    Properties:
+      Align: =Align.Center
+      BorderColor: =uiDanger
+      BorderThickness: =1
+      Color: =uiDanger
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =36
+      OnSelect: |-
+        =If(
+            !psConfirmRemove,
+            Set(psConfirmRemove, true),
+
+            Set(psConfirmRemove, false);
+            Set(psHireError, "");
+            IfError(
+                RemoveIf(EmployeeStatusTable, Employee.Id = psSelected.ID);
+                Remove(EmployeeTable, LookUp(EmployeeTable, ID = psSelected.ID));
+                true,
+                Set(psHireError, FirstError.Message)
+            );
+            If(
+                IsBlank(psHireError),
+                Notify("Removed planned hire " & psSelected.FullName & ".", NotificationType.Success);
+                RemoveIf(psEmployees, ID = psSelected.ID);
+                Set(psSelected, Blank());
+                Clear(psStatus),
+                Notify("Could not remove: " & psHireError, NotificationType.Error)
+            )
+        )
+      Size: =9
+      Text: =If(psConfirmRemove, "CLICK AGAIN TO REMOVE", "REMOVE PLANNED HIRE")
+      Visible: =psSelected.Kind = "Planned"
+      Width: =190
