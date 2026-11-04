@@ -1,0 +1,41 @@
+// Review of the app exported 04 Nov 2026 07:59 (QA_4). Four fixes, most important first.
+
+// 1. CRITICAL: refresh the EmployeeStatusTable data source.
+//    The app still stores the OLD definition of the Employee lookup ("shows LastName").
+//    Until it is refreshed, Employee.Value = Text(ID) is compared with LAST NAMES, so
+//    employees can show NO DATA and SAVE could create duplicates.
+//    Data panel > EmployeeStatusTable > ... > Refresh.
+//    If a fresh export still says LastName, remove the data source and add it again
+//    (same name, so the formulas keep working). Then send me the app once more.
+
+// 2. App  >  OnStart   -> delete everything (leave it empty)
+//    It is old-screen code: it queries DepartmentTable with Lower() (filtered locally) and
+//    sets variables nothing uses any more (varIsGM, colPlanningDates, varCurrentUserEmail).
+
+// 3. galPsOvCells (the small gallery inside each overview row)  >  OnSelect
+//    The checker reports a HIGH "Select cycle" here. This version opens the employee/year
+//    directly instead of selecting the parent gallery.
+Set(psSelected, LookUp(psEmployees, ID = ThisItem.EmpId));
+Set(psLocked, psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
+Set(psConfirmRemove, false);
+ClearCollect(psStatus, Filter(psAllStatus, Employee.Id = ThisItem.EmpId));
+Set(psFY, ThisItem.FY);
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false);
+Set(psShowOverview, false)
+
+// 4. lblBtnMenu  >  OnSelect   (OVERVIEW)
+//    The checker could not send Text(emp.ID) to SharePoint inside ForAll; work out the
+//    text first so the filter compares the column with a plain value.
+Clear(psAllStatus);
+ForAll(
+    psEmployees As emp,
+    With(
+        {ref: Text(emp.ID)},
+        Collect(psAllStatus, Filter(EmployeeStatusTable, Employee.Value = ref))
+    )
+);
+Set(psOvPick, 0);
+Set(psShowOverview, true)

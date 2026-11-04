@@ -1,0 +1,1696 @@
+# ************************************************************************************************
+# Warning: YAML source code for Canvas Apps should only be used to review changes made within Power Apps Studio and for minor edits (Preview).
+# Use the maker portal to create and edit your Power Apps.
+# 
+# The schema file for Canvas Apps is available at https://go.microsoft.com/fwlink/?linkid=2304907
+# 
+# For more information, visit https://go.microsoft.com/fwlink/?linkid=2292623
+# ************************************************************************************************
+Screens:
+  PlanningScreen:
+    Properties:
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnVisible: |-
+        =// PlanningScreen.OnVisible (replaces the piece 7 version).
+        // Everything this screen creates is prefixed "ps", so it never depends on the old screens.
+        // Fiscal years start on 1 April. Planning covers the next five fiscal years.
+        Set(psFiscalBase, If(Month(Today()) >= 4, Year(Today()), Year(Today()) - 1));
+        ClearCollect(
+            psYears,
+            ForAll(
+                Sequence(5, 1) As n,
+                {FY: psFiscalBase + n.Value, StartDate: Date(psFiscalBase + n.Value, 4, 1)}
+            )
+        );
+        If(IsBlank(psFY) || !(psFY in psYears.FY), Set(psFY, First(psYears).FY));
+        // A record is "outdated" when it was last updated more than this many months ago.
+        Set(psOutdatedMonths, 10);
+        // The current General Manager's departments
+        Set(psUserEmail, Lower(User().Email));
+        ClearCollect(
+            psDepts,
+            Filter(DepartmentTable, Lower(GeneralManager.Email) = psUserEmail)
+        );
+        // Direct employees and planned hires: home address code is one of the GM's departments
+        Clear(psEmployees);
+        ForAll(
+            psDepts As dept,
+            Collect(
+                psEmployees,
+                ForAll(
+                    Filter(EmployeeTable, AddressCode.Value = dept.AddressCode) As emp,
+                    {
+                        ID: emp.ID,
+                        FullName: Trim(emp.'FirstName ' & " " & emp.'MiddleName ' & " " & emp.'LastName '),
+                        AddressCode: emp.AddressCode.Value,
+                        EmployeeNo: emp.'Employee ID',
+                        Kind: If(emp.PlannedHire, "Planned", "Direct")
+                    }
+                )
+            )
+        );
+        // Mobility employees: a status record (any year) assigns them to one of the GM's departments.
+        // Matched by employee ID (the old screen matched by last name).
+        Clear(psMobilityIds);
+        ForAll(
+            psDepts As dept,
+            Collect(
+                psMobilityIds,
+                ForAll(
+                    Filter(EmployeeStatusTable, MobilityAC.Value = dept.AddressCode) As st,
+                    {EmpId: st.Employee.Id}
+                )
+            )
+        );
+        ForAll(
+            Filter(Distinct(psMobilityIds, EmpId), !(Value in psEmployees.ID)) As mob,
+            With(
+                {emp: LookUp(EmployeeTable, ID = mob.Value)},
+                If(
+                    !IsBlank(emp),
+                    Collect(
+                        psEmployees,
+                        {
+                            ID: emp.ID,
+                            FullName: Trim(emp.'FirstName ' & " " & emp.'MiddleName ' & " " & emp.'LastName '),
+                            AddressCode: emp.AddressCode.Value,
+                            EmployeeNo: emp.'Employee ID',
+                            Kind: "Mobility"
+                        }
+                    )
+                )
+            )
+        );
+        // Keep the selection only if that employee is still in the list, and reload their records
+        If(!(psSelected.ID in psEmployees.ID), Set(psSelected, Blank()));
+        If(
+            IsBlank(psSelected),
+            Clear(psStatus),
+            ClearCollect(psStatus, Filter(EmployeeStatusTable, Employee.Value = Text(psSelected.ID)))
+        );
+        // Mobility employees are read-only unless their home address code is "Outside" (same rule as before)
+        Set(psLocked, !IsBlank(psSelected) && psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
+        // The record shown in the form, and the previous year's record used to pre-fill a new one
+        Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+        Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+        Set(psRegionalOverride, Blank());
+        Set(psConfirmResign, false);
+        // Promotion suggests the grade one step above last year's regional grade
+        Set(
+            psPromoGrade,
+            With(
+                {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+                If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+            )
+        );
+        Set(psConfirmRemove, false);
+        Set(psShowHire, false);
+        Set(psShowOverview, false);
+    Children:
+      - conPlanRoot:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =uiBg
+            Height: =Parent.Height
+            LayoutDirection: =LayoutDirection.Vertical
+            Width: =Parent.Width
+          Children:
+            - conPlanHeader:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =uiBg
+                  FillPortions: =0
+                  Height: =64
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =16
+                  LayoutMinHeight: =64
+                  PaddingLeft: =24
+                  PaddingRight: =24
+                Children:
+                  - lblPlanAccent:
+                      Control: Label@2.5.1
+                      Properties:
+                        Fill: =uiGold
+                        Height: =32
+                        Text: =""
+                        Width: =6
+                  - lblPlanTitle:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =uiGold
+                        FillPortions: =1
+                        FontWeight: =FontWeight.Bold
+                        Size: =18
+                        Text: ="PERSONNEL PLANNING"
+                  - lblPlanUser:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Right
+                        Color: =uiMuted
+                        Size: =11
+                        Text: =Upper(User().FullName)
+                        Width: =320
+            - lblPlanHeaderLine:
+                Control: Label@2.5.1
+                Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
+                  Fill: =uiGold
+                  Height: =2
+                  Text: =""
+            - conPlanBody:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =uiBg
+                  LayoutDirection: =LayoutDirection.Horizontal
+                Children:
+                  - conPlanSidebar:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =uiBg
+                        FillPortions: =0
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =12
+                        LayoutMinWidth: =320
+                        PaddingBottom: =16
+                        PaddingLeft: =16
+                        PaddingRight: =16
+                        PaddingTop: =16
+                        Width: =320
+                      Children:
+                        - lblSideTitle:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =uiGold
+                              FontWeight: =FontWeight.Bold
+                              Height: =24
+                              Size: =12
+                              Text: ="EMPLOYEES"
+                        - txtPsSearch:
+                            Control: TextInput@0.0.54
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Height: =34
+                              Placeholder: ="Search name or employee ID"
+                        - lblPsCount:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =uiMuted
+                              Height: =18
+                              Size: =9
+                              Text: =CountRows(galPsEmployees.AllItems) & " of " & CountRows(psEmployees) & " employees"
+                        - galPsEmployees:
+                            Control: Gallery@2.15.0
+                            Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
+                            Properties:
+                              Items: |-
+                                =Sort(
+                                    Filter(
+                                        psEmployees,
+                                        IsBlank(txtPsSearch.Value) ||
+                                        txtPsSearch.Value in FullName ||
+                                        txtPsSearch.Value in EmployeeNo
+                                    ),
+                                    Kind & "|" & FullName
+                                )
+                              OnSelect: |-
+                                =// galPsEmployees  >  OnSelect
+                                Set(psSelected, ThisItem);
+                                Set(psLocked, ThisItem.Kind = "Mobility" && ThisItem.AddressCode <> "Outside");
+                                Set(psConfirmRemove, false);
+                                ClearCollect(psStatus, Filter(EmployeeStatusTable, Employee.Value = Text(ThisItem.ID)));
+                                Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+                                Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+                                Set(psRegionalOverride, Blank());
+                                Set(psConfirmResign, false);
+                                // Promotion suggests the grade one step above last year's regional grade
+                                Set(
+                                    psPromoGrade,
+                                    With(
+                                        {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+                                        If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+                                    )
+                                );
+                              TemplateFill: =If(ThisItem.ID = psSelected.ID, RGBA(212, 160, 23, 0.15), RGBA(0, 0, 0, 0))
+                              TemplateSize: =60
+                            Children:
+                              - lblPsEmpBar:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Fill: =uiGold
+                                    Height: =Parent.TemplateHeight - 16
+                                    OnSelect: =Select(Parent)
+                                    Text: =""
+                                    Visible: =ThisItem.ID = psSelected.ID
+                                    Width: =4
+                                    Y: =8
+                              - lblPsEmpName:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =uiInk
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =24
+                                    OnSelect: =Select(Parent)
+                                    Size: =12
+                                    Text: =ThisItem.FullName
+                                    Width: =Parent.TemplateWidth - 24
+                                    X: =14
+                                    Y: =8
+                              - lblPsEmpSub:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =uiMuted
+                                    Height: =18
+                                    OnSelect: =Select(Parent)
+                                    Size: =9
+                                    Text: =ThisItem.AddressCode & "  ·  " & ThisItem.EmployeeNo
+                                    Width: =Parent.TemplateWidth - 110
+                                    X: =14
+                                    Y: =32
+                              - lblPsEmpTag:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Align: =Align.Right
+                                    Color: =uiGold
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =18
+                                    OnSelect: =Select(Parent)
+                                    Size: =8
+                                    Text: =Switch(ThisItem.Kind, "Mobility", "MOBILITY", "Planned", "PLANNED HIRE", "")
+                                    Width: =80
+                                    X: =Parent.TemplateWidth - 92
+                                    Y: =32
+                              - lblPsEmpLine:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Fill: =RGBA(0, 0, 0, 0.08)
+                                    Height: =1
+                                    Text: =""
+                                    Width: =Parent.TemplateWidth
+                                    Y: =Parent.TemplateHeight - 1
+                        - lblPsAddHire:
+                            Control: Label@2.5.1
+                            Properties:
+                              Align: =Align.Center
+                              AlignInContainer: =AlignInContainer.Stretch
+                              BorderColor: =uiGold
+                              BorderThickness: =1
+                              Color: =uiGold
+                              FontWeight: =FontWeight.Bold
+                              Height: =36
+                              OnSelect: |-
+                                =Reset(txtPsHireName);
+                                Set(psShowHire, true)
+                              Size: =10
+                              Text: ="+  ADD PLANNED HIRE"
+                  - lblSideDivider:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Fill: =uiGold
+                        Text: =""
+                        Width: =2
+                  - conPlanMain:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =uiBg
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =16
+                        PaddingBottom: =24
+                        PaddingLeft: =32
+                        PaddingRight: =32
+                        PaddingTop: =24
+                      Children:
+                        - lblMainTitle:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =uiInk
+                              FontWeight: =FontWeight.Bold
+                              Size: =20
+                              Text: =If(IsBlank(psSelected), "SELECT AN EMPLOYEE", Upper(psSelected.FullName))
+                        - lblMainPlaceholder:
+                            Control: Label@2.5.1
+                            Properties:
+                              AlignInContainer: =AlignInContainer.Stretch
+                              Color: =uiMuted
+                              Height: =24
+                              Size: =12
+                              Text: |-
+                                =If(
+                                    IsBlank(psSelected),
+                                    "Pick someone from the list on the left.",
+                                    psSelected.AddressCode & "  ·  " & psSelected.EmployeeNo &
+                                    If(psSelected.Kind = "Mobility", "  ·  Mobility (assigned to one of your departments)", "")
+                                )
+                              VerticalAlign: =VerticalAlign.Top
+                        - conPsYearBar:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              FillPortions: =0
+                              Height: =72
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =16
+                              LayoutMinHeight: =72
+                              Visible: =!IsBlank(psSelected)
+                            Children:
+                              - lblPsYearCaption:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Color: =uiMuted
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =24
+                                    Size: =10
+                                    Text: ="PLANNING YEAR"
+                                    Width: =120
+                              - galPsYears:
+                                  Control: Gallery@2.15.0
+                                  Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
+                                  Properties:
+                                    FillPortions: =0
+                                    Height: =64
+                                    Items: =psYears
+                                    OnSelect: |+
+                                      =// galPsYears  >  OnSelect
+                                      Set(psFY, ThisItem.FY);
+                                      Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+                                      Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+                                      Set(psRegionalOverride, Blank());
+                                      Set(psConfirmResign, false);
+                                      // Promotion suggests the grade one step above last year's regional grade
+                                      Set(
+                                          psPromoGrade,
+                                          With(
+                                              {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+                                              If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+                                          )
+                                      )
+                                    TemplateFill: =If(ThisItem.FY = psFY, RGBA(212, 160, 23, 0.18), RGBA(0, 0, 0, 0.04))
+                                    TemplatePadding: =4
+                                    TemplateSize: =64
+                                    Width: =650
+                                    WrapCount: =5
+                                  Children:
+                                    - lblPsFYText:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =If(ThisItem.FY = psFY, uiGold, uiInk)
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =28
+                                          OnSelect: =Select(Parent)
+                                          Size: =14
+                                          Text: =Text(ThisItem.FY)
+                                          Width: =Parent.TemplateWidth
+                                          Y: =6
+                                    - lblPsFYState:
+                                        Control: Label@2.5.1
+                                        Properties:
+                                          Align: =Align.Center
+                                          Color: =Switch(Self.Text, "NO DATA", uiMuted, "OUTDATED", uiDanger, uiOk)
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =18
+                                          OnSelect: =Select(Parent)
+                                          Size: =8
+                                          Text: |-
+                                            =With(
+                                                {rec: LookUp(psStatus, Year(Date) = ThisItem.FY)},
+                                                If(
+                                                    IsBlank(rec), "NO DATA",
+                                                    DateDiff(rec.'Last Updated', Today(), TimeUnit.Months) > psOutdatedMonths, "OUTDATED",
+                                                    "UP TO DATE"
+                                                )
+                                            )
+                                          Width: =Parent.TemplateWidth
+                                          Y: =36
+                              - lblPsRemoveHire:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Align: =Align.Center
+                                    BorderColor: =uiDanger
+                                    BorderThickness: =1
+                                    Color: =uiDanger
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =36
+                                    OnSelect: |-
+                                      =// lblPsRemoveHire  >  OnSelect
+                                      If(
+                                          !psConfirmRemove,
+                                          Set(psConfirmRemove, true),
+                                          Set(psConfirmRemove, false);
+                                          Set(psHireError, "");
+                                          IfError(
+                                              Remove(EmployeeStatusTable, psStatus);
+                                              Remove(EmployeeTable, LookUp(EmployeeTable, ID = psSelected.ID));
+                                              true,
+                                              Set(psHireError, FirstError.Message)
+                                          );
+                                          If(
+                                              IsBlank(psHireError),
+                                              Notify("Removed planned hire " & psSelected.FullName & ".", NotificationType.Success);
+                                              RemoveIf(psEmployees, ID = psSelected.ID);
+                                              Set(psSelected, Blank());
+                                              Clear(psStatus),
+                                              Notify("Could not remove: " & psHireError, NotificationType.Error)
+                                          )
+                                      )
+                                    Size: =9
+                                    Text: =If(psConfirmRemove, "CLICK AGAIN TO REMOVE", "REMOVE PLANNED HIRE")
+                                    Visible: =psSelected.Kind = "Planned"
+                                    Width: =190
+                              - lblPsStartFY_1:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    Text: |-
+                                      =// Fiscal year in which a planned hire starts (blank for real employees)
+                                      If(psSelected.Kind = "Planned" && StartsWith(psSelected.EmployeeNo, "TBH FY"), Right(psSelected.EmployeeNo, 4), "")
+                                    Visible: =false
+                                    Width: =0
+                        - conPsForm:
+                            Control: GroupContainer@1.5.0
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =10
+                              LayoutOverflowY: =LayoutOverflow.Scroll
+                              Visible: =!IsBlank(psSelected)
+                            Children:
+                              - lblPsRecordInfo:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =uiMuted
+                                    Height: =22
+                                    Size: =10
+                                    Text: |-
+                                      =If(
+                                          IsBlank(psRecord),
+                                          "FY" & psFY & " has no saved record yet" &
+                                              If(IsBlank(psPrev), ".", ", so the fields are pre-filled from FY" & (psFY - 1) & "."),
+                                          "FY" & psFY & " saved record, last updated " & Text(psRecord.'Last Updated', "dd mmm yyyy")
+                                      ) & If(psLocked, "  Read-only: mobility employee managed by their home department.", "")
+                              - lblPsSecPosition:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =uiGold
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =22
+                                    Size: =10
+                                    Text: ="POSITION"
+                              - conPsRowPosition:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    Height: =64
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =24
+                                    LayoutMinHeight: =64
+                                  Children:
+                                    - fldPsBizCorp:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                        Children:
+                                          - lblPsBizCorpCap:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiMuted
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =9
+                                                Text: ="BIZ / CORP"
+                                          - cmbPsBizCorp:
+                                              Control: ComboBox@0.0.51
+                                              Properties:
+                                                AccessibleLabel: ="Biz/Corp"
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                DefaultSelectedItems: =Filter(Choices([@EmployeeStatusTable].EmploymentType), Value = Coalesce(psRecord.EmploymentType.Value, psPrev.EmploymentType.Value))
+                                                DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                                                Height: =36
+                                                Items: =Choices([@EmployeeStatusTable].EmploymentType)
+                                    - fldPsHRCode:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                        Children:
+                                          - lblPsHRCodeCap:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiMuted
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =9
+                                                Text: ="HR CODE"
+                                          - cmbPsHRCode:
+                                              Control: ComboBox@0.0.51
+                                              Properties:
+                                                AccessibleLabel: ="HR Code"
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                DefaultSelectedItems: =Filter(Choices([@EmployeeStatusTable].Division), Value = Coalesce(psRecord.Division.Value, psPrev.Division.Value))
+                                                DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                                                Height: =36
+                                                Items: =Choices([@EmployeeStatusTable].Division)
+                                    - fldPsAddress:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                        Children:
+                                          - lblPsAddressCap:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiMuted
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =9
+                                                Text: ="ADDRESS CODE"
+                                          - cmbPsAddress:
+                                              Control: ComboBox@0.0.51
+                                              Properties:
+                                                AccessibleLabel: ="Address Code"
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                DefaultSelectedItems: =Filter(Choices([@EmployeeStatusTable].AddressCode), Value = Coalesce(psRecord.AddressCode.Value, psPrev.AddressCode.Value))
+                                                DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                                                Height: =36
+                                                Items: =Choices([@EmployeeStatusTable].AddressCode)
+                              - lblPsSecGrade:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =uiGold
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =22
+                                    Size: =10
+                                    Text: ="GRADE"
+                              - conPsRowGrade:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    Height: =64
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =24
+                                    LayoutMinHeight: =64
+                                  Children:
+                                    - fldPsRegional:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                        Children:
+                                          - lblPsRegionalCap:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiMuted
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =9
+                                                Text: ="REGIONAL GRADE"
+                                          - cmbPsRegional:
+                                              Control: ComboBox@0.0.51
+                                              Properties:
+                                                AccessibleLabel: ="Regional Grade"
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                DefaultSelectedItems: |-
+                                                  =// cmbPsRegional  >  DefaultSelectedItems   (the APPLY link can override it)
+                                                  Filter(
+                                                      Choices([@EmployeeStatusTable].RegionalGrade),
+                                                      Value = Coalesce(psRegionalOverride, psRecord.RegionalGrade.Value, psPrev.RegionalGrade.Value)
+                                                  )
+                                                DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                                                Height: =36
+                                                Items: =Choices([@EmployeeStatusTable].RegionalGrade)
+                                    - fldPsGlobal:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                        Children:
+                                          - lblPsGlobalCap:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiMuted
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =9
+                                                Text: ="GLOBAL GRADE (FROM REGIONAL)"
+                                          - lblPsGlobalValue:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiInk
+                                                Fill: =RGBA(0, 0, 0, 0.04)
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =36
+                                                PaddingLeft: =10
+                                                Size: =12
+                                                Text: |-
+                                                  =Switch(
+                                                      cmbPsRegional.Selected.Value,
+                                                      "(MEA) E", "N/A",
+                                                      "(MEA) G1", "GG5", "(MEA) G1+", "GG5", "(MEA) G2", "GG5", "(MEA) G2+", "GG5",
+                                                      "(MEA) G3", "GG4", "(MEA) G3+", "GG4",
+                                                      "(MEA) G4M / G4P", "GG3",
+                                                      "(MEA) M2/G5", "GG2", "(MEA) M2+/G6", "GG2",
+                                                      "(MEA) M1/G7", "GG1",
+                                                      "—"
+                                                  )
+                                    - fldPsPromotion:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                        Children:
+                                          - lblPsPromotionCap:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiMuted
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =9
+                                                Text: ="PROMOTION THIS YEAR"
+                                          - tglPsPromotion:
+                                              Control: Toggle@1.1.5
+                                              Properties:
+                                                AccessibleLabel: ="Promotion"
+                                                Checked: =Coalesce(psRecord.Promotion, false)
+                                                DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                                                Height: =36
+                                                Label: =If(Self.Checked, "Yes", "No")
+                                                OnCheck: |-
+                                                  =If(
+                                                      Self.Checked <> Coalesce(psRecord.Promotion, false),
+                                                      Set(psRegionalOverride, With(
+                                                          {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = cmbPsRegional.Selected.Value).N},
+                                                          If(IsBlank(pos), Blank(), Index(gradeLadder, Min(pos + 1, CountRows(gradeLadder))).Value)
+                                                      )),
+                                                      Set(psRegionalOverride, Blank())
+                                                  )
+                                                OnUncheck: |-
+                                                  =If(
+                                                      Self.Checked <> Coalesce(psRecord.Promotion, false),
+                                                      Set(psRegionalOverride, With(
+                                                          {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = cmbPsRegional.Selected.Value).N},
+                                                          If(IsBlank(pos), Blank(), Index(gradeLadder, Max(pos - 1, 1)).Value)
+                                                      )),
+                                                      Set(psRegionalOverride, Blank())
+                                                  )
+                              - lblPsSecStatus:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =uiGold
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =22
+                                    Size: =10
+                                    Text: ="STATUS"
+                              - conPsRowStatus:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    Height: =64
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =24
+                                    LayoutMinHeight: =64
+                                  Children:
+                                    - fldPsHQ:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                        Children:
+                                          - lblPsHQCap:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiMuted
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =9
+                                                Text: ="HQ EMPLOYMENT"
+                                          - tglPsHQ:
+                                              Control: Toggle@1.1.5
+                                              Properties:
+                                                AccessibleLabel: ="HQ Employment"
+                                                Checked: =Coalesce(psRecord.HQEmployment, psPrev.HQEmployment, false)
+                                                DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                                                Height: =36
+                                                Label: =If(Self.Checked, "Yes", "No")
+                                    - fldPsResignation:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                        Children:
+                                          - lblPsResignationCap:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiMuted
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =9
+                                                Text: ="RESIGNATION"
+                                          - tglPsResignation:
+                                              Control: Toggle@1.1.5
+                                              Properties:
+                                                AccessibleLabel: ="Resignation"
+                                                Checked: =Coalesce(psRecord.Resignation, false)
+                                                DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                                                Height: =36
+                                                Label: =If(Self.Checked, "Yes", "No")
+                                    - fldPsSuccession:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                        Children:
+                                          - lblPsSuccessionCap:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiMuted
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =9
+                                                Text: ="SUCCESSION NEEDED"
+                                          - tglPsSuccession:
+                                              Control: Toggle@1.1.5
+                                              Properties:
+                                                AccessibleLabel: ="Succession"
+                                                Checked: =Coalesce(psRecord.Succession, false)
+                                                DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                                                Height: =36
+                                                Label: =If(Self.Checked, "Yes", "No")
+                              - lblPsSecMobility:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =uiGold
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =22
+                                    Size: =10
+                                    Text: ="MOBILITY / TRANSFER"
+                              - conPsRowMobility:
+                                  Control: GroupContainer@1.5.0
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    Height: =64
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =24
+                                    LayoutMinHeight: =64
+                                  Children:
+                                    - fldPsMobility:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                        Children:
+                                          - lblPsMobilityCap:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiMuted
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =9
+                                                Text: ="ON MOBILITY"
+                                          - tglPsMobility:
+                                              Control: Toggle@1.1.5
+                                              Properties:
+                                                AccessibleLabel: ="Mobility"
+                                                Checked: =Coalesce(psRecord.Mobility, psPrev.Mobility, false)
+                                                DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                                                Height: =36
+                                                Label: =If(Self.Checked, "Yes", "No")
+                                    - fldPsMobRegion:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                          Visible: =tglPsMobility.Checked
+                                        Children:
+                                          - lblPsMobRegionCap:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiMuted
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =9
+                                                Text: ="MOBILITY REGION"
+                                          - cmbPsMobRegion:
+                                              Control: ComboBox@0.0.51
+                                              Properties:
+                                                AccessibleLabel: ="Mobility Region"
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                DefaultSelectedItems: =If(tglPsMobility.Checked, Filter(Choices([@EmployeeStatusTable].MobilityRegion), Value = Coalesce(psRecord.MobilityRegion.Value, psPrev.MobilityRegion.Value)))
+                                                DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                                                Height: =36
+                                                Items: =Choices([@EmployeeStatusTable].MobilityRegion)
+                                    - fldPsMobAC:
+                                        Control: GroupContainer@1.5.0
+                                        Variant: AutoLayout
+                                        Properties:
+                                          DropShadow: =DropShadow.None
+                                          LayoutDirection: =LayoutDirection.Vertical
+                                          LayoutGap: =4
+                                          Visible: =tglPsMobility.Checked
+                                        Children:
+                                          - lblPsMobACCap:
+                                              Control: Label@2.5.1
+                                              Properties:
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                Color: =uiMuted
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =9
+                                                Text: ="MOBILITY ADDRESS CODE"
+                                          - cmbPsMobAC:
+                                              Control: ComboBox@0.0.51
+                                              Properties:
+                                                AccessibleLabel: ="Mobility Address Code"
+                                                AlignInContainer: =AlignInContainer.Stretch
+                                                DefaultSelectedItems: =If(tglPsMobility.Checked, Filter(Choices([@EmployeeStatusTable].MobilityAC), Value = Coalesce(psRecord.MobilityAC.Value, psPrev.MobilityAC.Value)))
+                                                DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                                                Height: =36
+                                                Items: =Choices([@EmployeeStatusTable].MobilityAC)
+                              - lblPsSecRemark:
+                                  Control: Label@2.5.1
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =uiGold
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =22
+                                    Size: =10
+                                    Text: ="REMARK"
+                              - txtPsRemark:
+                                  Control: TextInput@0.0.54
+                                  Properties:
+                                    AccessibleLabel: ="Remark"
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                                    Height: =36
+                                    Placeholder: ="Optional note for this year"
+                                    Value: =psRecord.Remark
+            - lblPlanFooterLine:
+                Control: Label@2.5.1
+                Properties:
+                  AlignInContainer: =AlignInContainer.Stretch
+                  Fill: =uiGold
+                  Height: =2
+                  Text: =""
+            - conPlanFooter:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =uiPanel
+                  FillPortions: =0
+                  Height: =64
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =12
+                  LayoutMinHeight: =64
+                  PaddingLeft: =24
+                  PaddingRight: =24
+                Children:
+                  - lblBtnMenu:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =uiGold
+                        BorderThickness: =1
+                        Color: =uiGold
+                        FontWeight: =FontWeight.Bold
+                        OnSelect: |-
+                          =// lblBtnMenu  >  OnSelect   (OVERVIEW)
+                          Clear(psAllStatus);
+                          ForAll(
+                              psEmployees As emp,
+                              Collect(psAllStatus, Filter(EmployeeStatusTable, Employee.Value = Text(emp.ID)))
+                          );
+                          Set(psOvPick, 0);
+                          Set(psShowOverview, true)
+                        Size: =11
+                        Text: ="OVERVIEW"
+                        Width: =140
+                  - lblFooterStatus:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =If(!IsBlank(lblPsMissing.Text) || psConfirmResign, uiDanger, uiWhite)
+                        FillPortions: =1
+                        Size: =10
+                        Text: |-
+                          =// lblFooterStatus  >  Text
+                          If(
+                              IsBlank(psSelected), "",
+                              psLocked, "Read-only: this mobility employee is planned by their home department.",
+                              !IsBlank(lblPsMissing.Text), "Missing: " & lblPsMissing.Text,
+                              psConfirmResign, "Resignation deletes FY" & (psFY + 1) & " onwards for this employee. Click CONFIRM SAVE to continue.",
+                              IsBlank(psRecord), "FY" & psFY & " will be created when you save.",
+                              "FY" & psFY & " will be updated when you save."
+                          )
+                  - lblBtnSaveAll:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =If(Self.DisplayMode = DisplayMode.Edit, uiGold, uiMuted)
+                        BorderThickness: =1
+                        Color: =If(Self.DisplayMode = DisplayMode.Edit, uiGold, uiMuted)
+                        DisplayMode: |-
+                          =// lblBtnSaveAll  >  DisplayMode
+                          If(
+                              IsBlank(psSelected) || psLocked || !IsBlank(lblPsMissing.Text) || tglPsResignation.Checked ||
+                                  psFY = Max(psYears, FY),
+                              DisplayMode.Disabled,
+                              DisplayMode.Edit
+                          )
+                        FontWeight: =FontWeight.Bold
+                        OnSelect: |-
+                          =// lblBtnSaveAll > OnSelect: save the selected year, then copy the shared settings to every later year.
+                          // Copied: Biz/Corp, HR Code, Address Code, Regional and Global Grade, HQ, Mobility (+ region and address code).
+                          // Not copied: Promotion, Resignation, Succession, Remark. Later-year records are overwritten or created,
+                          // but never past a year in which the employee resigns.
+                          Set(psSaveError, "");
+                          // 1. This year's record (same as SAVE)
+                          IfError(
+                              Set(
+                                  psSaved,
+                                  If(
+                                      IsBlank(psRecord),
+                                      Patch(
+                                          EmployeeStatusTable,
+                                          Defaults(EmployeeStatusTable),
+                                          {
+                                              Employee: {
+                                                  '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                                  Id: psSelected.ID,
+                                                  Value: psSelected.FullName
+                                              },
+                                              Date: Date(psFY, 4, 1),
+                                              Title: GUID(),
+                                              EmploymentType: cmbPsBizCorp.Selected,
+                                              Division: cmbPsHRCode.Selected,
+                                              AddressCode: cmbPsAddress.Selected,
+                                              RegionalGrade: cmbPsRegional.Selected,
+                                              GlobalGrade: {Value: lblPsGlobalValue.Text},
+                                              Promotion: tglPsPromotion.Checked,
+                                              HQEmployment: tglPsHQ.Checked,
+                                              Resignation: tglPsResignation.Checked,
+                                              Succession: tglPsSuccession.Checked,
+                                              Mobility: tglPsMobility.Checked,
+                                              Remark: txtPsRemark.Value,
+                                              'Last Updated': Now()
+                                          }
+                                      ),
+                                      Patch(
+                                          EmployeeStatusTable,
+                                          psRecord,
+                                          {
+                                              EmploymentType: cmbPsBizCorp.Selected,
+                                              Division: cmbPsHRCode.Selected,
+                                              AddressCode: cmbPsAddress.Selected,
+                                              RegionalGrade: cmbPsRegional.Selected,
+                                              GlobalGrade: {Value: lblPsGlobalValue.Text},
+                                              Promotion: tglPsPromotion.Checked,
+                                              HQEmployment: tglPsHQ.Checked,
+                                              Resignation: tglPsResignation.Checked,
+                                              Succession: tglPsSuccession.Checked,
+                                              Mobility: tglPsMobility.Checked,
+                                              Remark: txtPsRemark.Value,
+                                              'Last Updated': Now()
+                                          }
+                                      )
+                                  )
+                              );
+                              If(
+                                  tglPsMobility.Checked,
+                                  Patch(EmployeeStatusTable, psSaved, {MobilityRegion: cmbPsMobRegion.Selected, MobilityAC: cmbPsMobAC.Selected})
+                              ),
+                              Set(psSaveError, FirstError.Message)
+                          );
+                          // 2. Every later planning year
+                          If(
+                              IsBlank(psSaveError),
+                              IfError(
+                                  ForAll(
+                                      Filter(psYears, FY > psFY && (IsBlank(lblPsResignFY.Text) || FY <= Value(lblPsResignFY.Text))) As yr,
+                                      With(
+                                          {existing: LookUp(psStatus, Year(Date) = yr.FY)},
+                                          With(
+                                              {
+                                                  saved: If(
+                                                      IsBlank(existing),
+                                                      Patch(
+                                                          EmployeeStatusTable,
+                                                          Defaults(EmployeeStatusTable),
+                                                          {
+                                                              Employee: {
+                                                                  '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                                                  Id: psSelected.ID,
+                                                                  Value: psSelected.FullName
+                                                              },
+                                                              Date: yr.StartDate,
+                                                              Title: GUID(),
+                                                              EmploymentType: cmbPsBizCorp.Selected,
+                                                              Division: cmbPsHRCode.Selected,
+                                                              AddressCode: cmbPsAddress.Selected,
+                                                              RegionalGrade: cmbPsRegional.Selected,
+                                                              GlobalGrade: {Value: lblPsGlobalValue.Text},
+                                                              Promotion: false,
+                                                              HQEmployment: tglPsHQ.Checked,
+                                                              Resignation: false,
+                                                              Succession: false,
+                                                              Mobility: tglPsMobility.Checked,
+                                                              'Last Updated': Now()
+                                                          }
+                                                      ),
+                                                      Patch(
+                                                          EmployeeStatusTable,
+                                                          existing,
+                                                          {
+                                                              EmploymentType: cmbPsBizCorp.Selected,
+                                                              Division: cmbPsHRCode.Selected,
+                                                              AddressCode: cmbPsAddress.Selected,
+                                                              RegionalGrade: cmbPsRegional.Selected,
+                                                              GlobalGrade: {Value: lblPsGlobalValue.Text},
+                                                              HQEmployment: tglPsHQ.Checked,
+                                                              Mobility: tglPsMobility.Checked,
+                                                              'Last Updated': Now()
+                                                          }
+                                                      )
+                                                  )
+                                              },
+                                              If(
+                                                  tglPsMobility.Checked,
+                                                  Patch(EmployeeStatusTable, saved, {MobilityRegion: cmbPsMobRegion.Selected, MobilityAC: cmbPsMobAC.Selected})
+                                              )
+                                          )
+                                      )
+                                  );
+                                  true,
+                                  Set(psSaveError, "later years: " & FirstError.Message)
+                              )
+                          );
+                          If(
+                              IsBlank(psSaveError),
+                              Notify(
+                                  "Saved FY" & psFY & " for " & psSelected.FullName & " and copied it to the later years.",
+                                  NotificationType.Success
+                              ),
+                              Notify("Save All stopped: " & psSaveError, NotificationType.Error)
+                          );
+                          // 3. Reload this employee's records so the year tiles and form show what was saved
+                          ClearCollect(psStatus, Filter(EmployeeStatusTable, Employee.Value = Text(psSelected.ID)));
+                          Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+                          Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+                          Set(psRegionalOverride, Blank());
+                          Set(psConfirmResign, false);
+                          // Promotion suggests the grade one step above last year's regional grade
+                          Set(
+                              psPromoGrade,
+                              With(
+                                  {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+                                  If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+                              )
+                          )
+                        Size: =11
+                        Text: ="SAVE ALL"
+                        Width: =140
+                  - lblBtnSave:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        Color: =uiInk
+                        DisplayMode: |-
+                          =// lblBtnSave  >  DisplayMode
+                          If(IsBlank(psSelected) || psLocked || !IsBlank(lblPsMissing.Text), DisplayMode.Disabled, DisplayMode.Edit)
+                        Fill: |-
+                          =// lblBtnSave  >  Fill
+                          If(Self.DisplayMode = DisplayMode.Edit, uiGold, uiGoldDim)
+                        FontWeight: =FontWeight.Bold
+                        OnSelect: |-
+                          =// lblBtnSave > OnSelect: save the selected employee's record for the selected year.
+                          // Resignation deletes the employee's later years, so the first click only asks to confirm.
+                          If(
+                              tglPsResignation.Checked && !psConfirmResign && CountRows(Filter(psStatus, Year(Date) > psFY)) > 0,
+                              Set(psConfirmResign, true),
+                              Set(psConfirmResign, false);
+                              Set(psSaveError, "");
+                              // 1. Write this year's record, creating it if it does not exist yet
+                              IfError(
+                                  Set(
+                                      psSaved,
+                                      If(
+                                          IsBlank(psRecord),
+                                          Patch(
+                                              EmployeeStatusTable,
+                                              Defaults(EmployeeStatusTable),
+                                              {
+                                                  Employee: {
+                                                      '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedReference",
+                                                      Id: psSelected.ID,
+                                                      Value: psSelected.FullName
+                                                  },
+                                                  Date: Date(psFY, 4, 1),
+                                                  Title: GUID(),
+                                                  EmploymentType: cmbPsBizCorp.Selected,
+                                                  Division: cmbPsHRCode.Selected,
+                                                  AddressCode: cmbPsAddress.Selected,
+                                                  RegionalGrade: cmbPsRegional.Selected,
+                                                  GlobalGrade: {Value: lblPsGlobalValue.Text},
+                                                  Promotion: tglPsPromotion.Checked,
+                                                  HQEmployment: tglPsHQ.Checked,
+                                                  Resignation: tglPsResignation.Checked,
+                                                  Succession: tglPsSuccession.Checked,
+                                                  Mobility: tglPsMobility.Checked,
+                                                  Remark: txtPsRemark.Value,
+                                                  'Last Updated': Now()
+                                              }
+                                          ),
+                                          Patch(
+                                              EmployeeStatusTable,
+                                              psRecord,
+                                              {
+                                                  EmploymentType: cmbPsBizCorp.Selected,
+                                                  Division: cmbPsHRCode.Selected,
+                                                  AddressCode: cmbPsAddress.Selected,
+                                                  RegionalGrade: cmbPsRegional.Selected,
+                                                  GlobalGrade: {Value: lblPsGlobalValue.Text},
+                                                  Promotion: tglPsPromotion.Checked,
+                                                  HQEmployment: tglPsHQ.Checked,
+                                                  Resignation: tglPsResignation.Checked,
+                                                  Succession: tglPsSuccession.Checked,
+                                                  Mobility: tglPsMobility.Checked,
+                                                  Remark: txtPsRemark.Value,
+                                                  'Last Updated': Now()
+                                              }
+                                          )
+                                      )
+                                  ),
+                                  Set(psSaveError, FirstError.Message)
+                              );
+                              If(
+                                  !IsBlank(psSaveError),
+                                  Notify("Could not save FY" & psFY & ": " & psSaveError, NotificationType.Error),
+                                  // 2. Mobility details are written only when the employee is on mobility
+                                  If(
+                                      tglPsMobility.Checked,
+                                      Patch(EmployeeStatusTable, psSaved, {MobilityRegion: cmbPsMobRegion.Selected, MobilityAC: cmbPsMobAC.Selected})
+                                  );
+                                  // 3. Resignation removes the employee's later years
+                                  If(
+                                      tglPsResignation.Checked,
+                                      Remove(EmployeeStatusTable, Filter(psStatus, Year(Date) > psFY))
+                                  );
+                                  Notify("Saved FY" & psFY & " for " & psSelected.FullName & ".", NotificationType.Success)
+                              );
+                              // 4. Reload this employee's records so the year tiles and form show what was saved
+                              ClearCollect(psStatus, Filter(EmployeeStatusTable, Employee.Value = Text(psSelected.ID)));
+                          Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+                          Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+                          Set(psRegionalOverride, Blank());
+                          Set(psConfirmResign, false);
+                          // Promotion suggests the grade one step above last year's regional grade
+                          Set(
+                              psPromoGrade,
+                              With(
+                                  {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+                                  If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+                              )
+                          )
+                          )
+                        Size: =11
+                        Text: |-
+                          =// lblBtnSave  >  Text
+                          If(psConfirmResign, "CONFIRM SAVE", "SAVE")
+                        Width: =140
+                  - lblPsMissing:
+                      Control: Label@2.5.1
+                      Properties:
+                        Text: |-
+                          =Concat(
+                              Filter(
+                                  Table(
+                                      {Name: "Biz/Corp", Ok: !IsBlank(cmbPsBizCorp.Selected.Value)},
+                                      {Name: "HR Code", Ok: !IsBlank(cmbPsHRCode.Selected.Value)},
+                                      {Name: "Address Code", Ok: !IsBlank(cmbPsAddress.Selected.Value)},
+                                      {Name: "Regional Grade", Ok: !IsBlank(cmbPsRegional.Selected.Value)},
+                                      {Name: "Mobility Region", Ok: !tglPsMobility.Checked || !IsBlank(cmbPsMobRegion.Selected.Value)},
+                                      {Name: "Mobility Address Code", Ok: !tglPsMobility.Checked || !IsBlank(cmbPsMobAC.Selected.Value)}
+                                  ),
+                                  !Ok
+                              ),
+                              Name,
+                              ", "
+                          )
+                        Visible: =false
+                        Width: =0
+                  - lblPsResignFY:
+                      Control: Label@2.5.1
+                      Properties:
+                        Text: |-
+                          =// First fiscal year in which this employee resigns (blank if none)
+                          With(
+                              {resigned: Filter(psStatus, Resignation)},
+                              If(CountRows(resigned) = 0, "", Text(Min(resigned, Year(Date))))
+                          )
+                        Visible: =false
+                        Width: =0
+                  - lblPsStartFY:
+                      Control: Label@2.5.1
+                      Properties:
+                        Text: |-
+                          =// Fiscal year in which a planned hire starts (blank for real employees)
+                          If(psSelected.Kind = "Planned" && StartsWith(psSelected.EmployeeNo, "TBH FY"), Right(psSelected.EmployeeNo, 4), "")
+                        Visible: =false
+                        Width: =0
+      - conPsHireOverlay:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(0, 0, 0, 0.55)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Center
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutJustifyContent: =LayoutJustifyContent.Center
+            Visible: =psShowHire
+            Width: =Parent.Width
+          Children:
+            - conPsHirePanel:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.Bold
+                  Fill: =uiBg
+                  FillPortions: =0
+                  Height: =420
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =10
+                  PaddingBottom: =24
+                  PaddingLeft: =28
+                  PaddingRight: =28
+                  PaddingTop: =24
+                  Width: =540
+                Children:
+                  - lblPsHireTitle:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiGold
+                        FontWeight: =FontWeight.Bold
+                        Height: =30
+                        Size: =16
+                        Text: ="ADD PLANNED HIRE"
+                  - lblPsHireHelp:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        Size: =10
+                        Text: ="A placeholder for someone you plan to hire. After creating it, plan their years with the form and SAVE / SAVE ALL."
+                  - lblPsHireNameCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="NAME OR ROLE"
+                  - txtPsHireName:
+                      Control: TextInput@0.0.54
+                      Properties:
+                        AccessibleLabel: ="Name or role"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Height: =36
+                        Placeholder: ="e.g. TBH - Senior Engineer"
+                  - lblPsHireDeptCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="DEPARTMENT (ADDRESS CODE)"
+                  - cmbPsHireDept:
+                      Control: ComboBox@0.0.51
+                      Properties:
+                        AccessibleLabel: ="Department"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Height: =36
+                        Items: =Filter(Choices([@EmployeeTable].AddressCode), Value in psDepts.AddressCode)
+                  - lblPsHireYearCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="STARTS IN FISCAL YEAR"
+                  - cmbPsHireYear:
+                      Control: ComboBox@0.0.51
+                      Properties:
+                        AccessibleLabel: ="Start year"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DefaultSelectedItems: =[Text(psFY)]
+                        Height: =36
+                        Items: =ForAll(psYears, Text(FY))
+                  - conPsHireButtons:
+                      Control: GroupContainer@1.5.0
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        FillPortions: =0
+                        Height: =56
+                        LayoutAlignItems: =LayoutAlignItems.End
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutJustifyContent: =LayoutJustifyContent.End
+                        LayoutMinHeight: =56
+                      Children:
+                        - lblPsHireCancel:
+                            Control: Label@2.5.1
+                            Properties:
+                              Align: =Align.Center
+                              BorderColor: =uiGold
+                              BorderThickness: =1
+                              Color: =uiGold
+                              FontWeight: =FontWeight.Bold
+                              OnSelect: =Set(psShowHire, false)
+                              Size: =11
+                              Text: ="CANCEL"
+                        - lblPsHireCreate:
+                            Control: Label@2.5.1
+                            Properties:
+                              Align: =Align.Center
+                              Color: =uiInk
+                              DisplayMode: =If(IsBlank(Trim(txtPsHireName.Value)) || IsBlank(cmbPsHireDept.Selected) || IsBlank(cmbPsHireYear.Selected), DisplayMode.Disabled, DisplayMode.Edit)
+                              Fill: =If(Self.DisplayMode = DisplayMode.Edit, uiGold, uiGoldDim)
+                              FontWeight: =FontWeight.Bold
+                              OnSelect: |-
+                                =Set(psHireError, "");
+                                IfError(
+                                    Set(
+                                        psNewHire,
+                                        Patch(
+                                            EmployeeTable,
+                                            Defaults(EmployeeTable),
+                                            {
+                                                Title: Trim(txtPsHireName.Value),
+                                                'FirstName ': Trim(txtPsHireName.Value),
+                                                'LastName ': "",
+                                                'Employee ID': "TBH FY" & cmbPsHireYear.Selected.Value,
+                                                AddressCode: cmbPsHireDept.Selected,
+                                                PlannedHire: true
+                                            }
+                                        )
+                                    ),
+                                    Set(psHireError, FirstError.Message)
+                                );
+                                If(
+                                    IsBlank(psHireError),
+                                    Collect(
+                                        psEmployees,
+                                        {
+                                            ID: psNewHire.ID,
+                                            FullName: Trim(txtPsHireName.Value),
+                                            AddressCode: cmbPsHireDept.Selected.Value,
+                                            EmployeeNo: "TBH FY" & cmbPsHireYear.Selected.Value,
+                                            Kind: "Planned"
+                                        }
+                                    );
+                                    Set(psSelected, LookUp(psEmployees, ID = psNewHire.ID));
+                                    Set(psLocked, false);
+                                    Set(psConfirmRemove, false);
+                                    Clear(psStatus);
+                                    Set(psFY, Value(cmbPsHireYear.Selected.Value));
+                                    Set(psRecord, Blank());
+                                    Set(psPrev, Blank());
+                                    Set(psRegionalOverride, Blank());
+                                    Set(psConfirmResign, false);
+                                    Set(psShowHire, false);
+                                    Notify("Planned hire created. Fill in FY" & psFY & " and press SAVE (or SAVE ALL for the later years).", NotificationType.Success),
+                                    Notify("Could not create the planned hire: " & psHireError, NotificationType.Error)
+                                )
+                              Size: =11
+                              Text: ="CREATE"
+      - conPsOverview:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =uiBg
+            Height: =Parent.Height
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =10
+            PaddingBottom: =20
+            PaddingLeft: =28
+            PaddingRight: =28
+            PaddingTop: =20
+            Visible: =psShowOverview
+            Width: =Parent.Width
+          Children:
+            - conPsOvTop:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =0
+                  Height: =44
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =16
+                  LayoutMinHeight: =44
+                Children:
+                  - lblPsOvTitle:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =uiGold
+                        FontWeight: =FontWeight.Bold
+                        Size: =18
+                        Text: ="OVERVIEW"
+                        Width: =160
+                  - lblPsOvLegend:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =uiMuted
+                        FillPortions: =1
+                        Size: =9
+                        Text: ="Regional grade per year  ·  P promotion  ·  R resignation  ·  M mobility  ·  S succession  ·  green up to date, red outdated, grey no data  ·  click a cell to open it"
+                  - lblPsOvClose:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =uiGold
+                        BorderThickness: =1
+                        Color: =uiGold
+                        FontWeight: =FontWeight.Bold
+                        OnSelect: =Set(psShowOverview, false)
+                        Size: =11
+                        Text: ="CLOSE"
+            - conPsOvHead:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =0
+                  Height: =28
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =6
+                  LayoutMinHeight: =28
+                  PaddingRight: =12
+                Children:
+                  - lblPsOvHName:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =uiGold
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        Size: =10
+                        Text: ="EMPLOYEE"
+                        Width: =274
+                  - lblPsOvH1:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        Color: =uiGold
+                        FillPortions: =1
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        Size: =10
+                        Text: ="FY" & Index(psYears, 1).FY
+                  - lblPsOvH2:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        Color: =uiGold
+                        FillPortions: =1
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        Size: =10
+                        Text: ="FY" & Index(psYears, 2).FY
+                  - lblPsOvH3:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        Color: =uiGold
+                        FillPortions: =1
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        Size: =10
+                        Text: ="FY" & Index(psYears, 3).FY
+                  - lblPsOvH4:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        Color: =uiGold
+                        FillPortions: =1
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        Size: =10
+                        Text: ="FY" & Index(psYears, 4).FY
+                  - lblPsOvH5:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Center
+                        Color: =uiGold
+                        FillPortions: =1
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        Size: =10
+                        Text: ="FY" & Index(psYears, 5).FY
+            - galPsOverview:
+                Control: Gallery@2.15.0
+                Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
+                Properties:
+                  Items: =Sort(psEmployees, Kind & "|" & FullName)
+                  OnSelect: |-
+                    =Set(psSelected, LookUp(psEmployees, ID = ThisItem.ID));
+                    Set(psLocked, psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
+                    Set(psConfirmRemove, false);
+                    ClearCollect(psStatus, Filter(psAllStatus, Employee.Id = ThisItem.ID));
+                    If(psOvPick > 0, Set(psFY, psOvPick));
+                    Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+                    Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+                    Set(psRegionalOverride, Blank());
+                    Set(psConfirmResign, false);
+                    Set(psShowOverview, false)
+                  TemplateFill: =If(ThisItem.ID = psSelected.ID, RGBA(212, 160, 23, 0.10), RGBA(0, 0, 0, 0))
+                  TemplateSize: =46
+                Children:
+                  - lblPsOvName:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =uiInk
+                        FontWeight: =FontWeight.Semibold
+                        Height: =Parent.TemplateHeight
+                        OnSelect: |-
+                          =Set(psOvPick, 0);
+                          Select(Parent)
+                        Size: =11
+                        Text: =ThisItem.FullName & Switch(ThisItem.Kind, "Planned", "  (planned)", "Mobility", "  (mobility)", "")
+                        Width: =270
+                  - galPsOvCells:
+                      Control: Gallery@2.15.0
+                      Variant: BrowseLayout_Vertical_ThreeTextVariant_ver5.0
+                      Properties:
+                        Height: =Parent.TemplateHeight
+                        Items: |-
+                          =ForAll(psYears As y, {FY: y.FY, EmpId: ThisItem.ID})
+                        OnSelect: |-
+                          =Set(psOvPick, ThisItem.FY);
+                          Select(Parent)
+                        TemplatePadding: =3
+                        TemplateSize: =Parent.TemplateHeight - 6
+                        Width: =Parent.TemplateWidth - 280
+                        WrapCount: =5
+                        X: =280
+                      Children:
+                        - lblPsOvCell:
+                            Control: Label@2.5.1
+                            Properties:
+                              Align: =Align.Center
+                              Color: =uiInk
+                              Fill: |-
+                                =With(
+                                    {r: LookUp(psAllStatus, Employee.Id = ThisItem.EmpId && Year(Date) = ThisItem.FY)},
+                                    If(
+                                        IsBlank(r), RGBA(0, 0, 0, 0.04),
+                                        DateDiff(r.'Last Updated', Today(), TimeUnit.Months) > psOutdatedMonths, RGBA(220, 70, 60, 0.16),
+                                        RGBA(90, 190, 110, 0.16)
+                                    )
+                                )
+                              FontWeight: =FontWeight.Semibold
+                              Height: =Parent.TemplateHeight
+                              OnSelect: =Select(Parent)
+                              Size: =10
+                              Text: |-
+                                =With(
+                                    {r: LookUp(psAllStatus, Employee.Id = ThisItem.EmpId && Year(Date) = ThisItem.FY)},
+                                    If(
+                                        IsBlank(r), "—",
+                                        Substitute(r.RegionalGrade.Value, "(MEA) ", "") &
+                                        If(r.Promotion, "  P", "") & If(r.Resignation, "  R", "") &
+                                        If(r.Mobility, "  M", "") & If(r.Succession, "  S", "")
+                                    )
+                                )
+                              Width: =Parent.TemplateWidth
