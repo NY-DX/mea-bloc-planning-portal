@@ -1,0 +1,487 @@
+- conPsForm:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =10
+      LayoutOverflowY: =LayoutOverflow.Scroll
+      Visible: =!IsBlank(psSelected)
+    Children:
+      - lblPsRecordInfo:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            Height: =22
+            Size: =10
+            Text: |-
+              =If(
+                  IsBlank(psRecord),
+                  "FY" & psFY & " has no saved record yet" &
+                      If(IsBlank(psPrev), ".", ", so the fields are pre-filled from FY" & (psFY - 1) & "."),
+                  "FY" & psFY & " saved record, last updated " & Text(psRecord.'Last Updated', "dd mmm yyyy")
+              ) & If(psLocked, "  Read-only: mobility employee managed by their home department.", "")
+      - lblPsSecPosition:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiGold
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =22
+            Size: =10
+            Text: ="POSITION"
+      - conPsRowPosition:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            DropShadow: =DropShadow.None
+            FillPortions: =0
+            Height: =64
+            LayoutDirection: =LayoutDirection.Horizontal
+            LayoutGap: =24
+            LayoutMinHeight: =64
+          Children:
+            - fldPsBizCorp:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                Children:
+                  - lblPsBizCorpCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="BIZ / CORP"
+                  - cmbPsBizCorp:
+                      Control: ComboBox@0.0.51
+                      Properties:
+                        AccessibleLabel: ="Biz/Corp"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DefaultSelectedItems: =Filter(Choices([@EmployeeStatusTable].EmploymentType), Value = Coalesce(psRecord.EmploymentType.Value, psPrev.EmploymentType.Value))
+                        DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                        FillPortions: =0
+                        Height: =36
+                        Items: =Choices([@EmployeeStatusTable].EmploymentType)
+            - fldPsHRCode:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                Children:
+                  - lblPsHRCodeCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="HR CODE"
+                  - cmbPsHRCode:
+                      Control: ComboBox@0.0.51
+                      Properties:
+                        AccessibleLabel: ="HR Code"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DefaultSelectedItems: =Filter(Choices([@EmployeeStatusTable].Division), Value = Coalesce(psRecord.Division.Value, psPrev.Division.Value))
+                        DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                        FillPortions: =0
+                        Height: =36
+                        Items: =Choices([@EmployeeStatusTable].Division)
+            - fldPsAddress:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                Children:
+                  - lblPsAddressCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="ADDRESS CODE"
+                  - cmbPsAddress:
+                      Control: ComboBox@0.0.51
+                      Properties:
+                        AccessibleLabel: ="Address Code"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DefaultSelectedItems: =Filter(Choices([@EmployeeStatusTable].AddressCode), Value = Coalesce(psRecord.AddressCode.Value, psPrev.AddressCode.Value))
+                        DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                        FillPortions: =0
+                        Height: =36
+                        Items: =Choices([@EmployeeStatusTable].AddressCode)
+      - lblPsSecGrade:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiGold
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =22
+            Size: =10
+            Text: ="GRADE"
+      - conPsRowGrade:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            DropShadow: =DropShadow.None
+            FillPortions: =0
+            Height: =64
+            LayoutDirection: =LayoutDirection.Horizontal
+            LayoutGap: =24
+            LayoutMinHeight: =64
+          Children:
+            - fldPsRegional:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                Children:
+                  - lblPsRegionalCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="REGIONAL GRADE"
+                  - cmbPsRegional:
+                      Control: ComboBox@0.0.51
+                      Properties:
+                        AccessibleLabel: ="Regional Grade"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DefaultSelectedItems: =Filter(Choices([@EmployeeStatusTable].RegionalGrade), Value = Coalesce(psRecord.RegionalGrade.Value, psPrev.RegionalGrade.Value))
+                        DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                        FillPortions: =0
+                        Height: =36
+                        Items: =Choices([@EmployeeStatusTable].RegionalGrade)
+            - fldPsGlobal:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                Children:
+                  - lblPsGlobalCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="GLOBAL GRADE (FROM REGIONAL)"
+                  - lblPsGlobalValue:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiInk
+                        Fill: =RGBA(0, 0, 0, 0.04)
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =36
+                        PaddingLeft: =10
+                        Size: =12
+                        Text: |-
+                          =Switch(
+                              cmbPsRegional.Selected.Value,
+                              "(MEA) E", "N/A",
+                              "(MEA) G1", "GG5", "(MEA) G1+", "GG5", "(MEA) G2", "GG5", "(MEA) G2+", "GG5",
+                              "(MEA) G3", "GG4", "(MEA) G3+", "GG4",
+                              "(MEA) G4M / G4P", "GG3",
+                              "(MEA) M2/G5", "GG2", "(MEA) M2+/G6", "GG2",
+                              "(MEA) M1/G7", "GG1",
+                              "—"
+                          )
+            - fldPsPromotion:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                Children:
+                  - lblPsPromotionCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="PROMOTION THIS YEAR"
+                  - tglPsPromotion:
+                      Control: Toggle@1.1.5
+                      Properties:
+                        AccessibleLabel: ="Promotion"
+                        Checked: =Coalesce(psRecord.Promotion, false)
+                        DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                        Height: =36
+                        Label: =If(Self.Checked, "Yes", "No")
+      - lblPsSecStatus:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiGold
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =22
+            Size: =10
+            Text: ="STATUS"
+      - conPsRowStatus:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            DropShadow: =DropShadow.None
+            FillPortions: =0
+            Height: =64
+            LayoutDirection: =LayoutDirection.Horizontal
+            LayoutGap: =24
+            LayoutMinHeight: =64
+          Children:
+            - fldPsHQ:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                Children:
+                  - lblPsHQCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="HQ EMPLOYMENT"
+                  - tglPsHQ:
+                      Control: Toggle@1.1.5
+                      Properties:
+                        AccessibleLabel: ="HQ Employment"
+                        Checked: =Coalesce(psRecord.HQEmployment, psPrev.HQEmployment, false)
+                        DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                        Height: =36
+                        Label: =If(Self.Checked, "Yes", "No")
+            - fldPsResignation:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                Children:
+                  - lblPsResignationCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="RESIGNATION"
+                  - tglPsResignation:
+                      Control: Toggle@1.1.5
+                      Properties:
+                        AccessibleLabel: ="Resignation"
+                        Checked: =Coalesce(psRecord.Resignation, false)
+                        DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                        Height: =36
+                        Label: =If(Self.Checked, "Yes", "No")
+            - fldPsSuccession:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                Children:
+                  - lblPsSuccessionCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="SUCCESSION NEEDED"
+                  - tglPsSuccession:
+                      Control: Toggle@1.1.5
+                      Properties:
+                        AccessibleLabel: ="Succession"
+                        Checked: =Coalesce(psRecord.Succession, false)
+                        DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                        Height: =36
+                        Label: =If(Self.Checked, "Yes", "No")
+      - lblPsSecMobility:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiGold
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =22
+            Size: =10
+            Text: ="MOBILITY / TRANSFER"
+      - conPsRowMobility:
+          Control: GroupContainer@1.5.0
+          Variant: AutoLayout
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            DropShadow: =DropShadow.None
+            FillPortions: =0
+            Height: =64
+            LayoutDirection: =LayoutDirection.Horizontal
+            LayoutGap: =24
+            LayoutMinHeight: =64
+          Children:
+            - fldPsMobility:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                Children:
+                  - lblPsMobilityCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="ON MOBILITY"
+                  - tglPsMobility:
+                      Control: Toggle@1.1.5
+                      Properties:
+                        AccessibleLabel: ="Mobility"
+                        Checked: =Coalesce(psRecord.Mobility, psPrev.Mobility, false)
+                        DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                        Height: =36
+                        Label: =If(Self.Checked, "Yes", "No")
+            - fldPsMobRegion:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                  Visible: =tglPsMobility.Checked
+                Children:
+                  - lblPsMobRegionCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="MOBILITY REGION"
+                  - cmbPsMobRegion:
+                      Control: ComboBox@0.0.51
+                      Properties:
+                        AccessibleLabel: ="Mobility Region"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DefaultSelectedItems: =If(tglPsMobility.Checked, Filter(Choices([@EmployeeStatusTable].MobilityRegion), Value = Coalesce(psRecord.MobilityRegion.Value, psPrev.MobilityRegion.Value)))
+                        DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                        FillPortions: =0
+                        Height: =36
+                        Items: =Choices([@EmployeeStatusTable].MobilityRegion)
+            - fldPsMobAC:
+                Control: GroupContainer@1.5.0
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =1
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =4
+                  Visible: =tglPsMobility.Checked
+                Children:
+                  - lblPsMobACCap:
+                      Control: Label@2.5.1
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        Color: =uiMuted
+                        FillPortions: =0
+                        FontWeight: =FontWeight.Semibold
+                        Height: =18
+                        Size: =9
+                        Text: ="MOBILITY ADDRESS CODE"
+                  - cmbPsMobAC:
+                      Control: ComboBox@0.0.51
+                      Properties:
+                        AccessibleLabel: ="Mobility Address Code"
+                        AlignInContainer: =AlignInContainer.Stretch
+                        DefaultSelectedItems: =If(tglPsMobility.Checked, Filter(Choices([@EmployeeStatusTable].MobilityAC), Value = Coalesce(psRecord.MobilityAC.Value, psPrev.MobilityAC.Value)))
+                        DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+                        FillPortions: =0
+                        Height: =36
+                        Items: =Choices([@EmployeeStatusTable].MobilityAC)
+      - lblPsSecRemark:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiGold
+            FillPortions: =0
+            FontWeight: =FontWeight.Bold
+            Height: =22
+            Size: =10
+            Text: ="REMARK"
+      - txtPsRemark:
+          Control: TextInput@0.0.54
+          Properties:
+            AccessibleLabel: ="Remark"
+            AlignInContainer: =AlignInContainer.Stretch
+            DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+            FillPortions: =0
+            Height: =36
+            Placeholder: ="Optional note for this year"
+            Value: =psRecord.Remark

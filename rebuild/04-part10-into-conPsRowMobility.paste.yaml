@@ -1,0 +1,30 @@
+- fldPsMobAC:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =4
+      Visible: =tglPsMobility.Checked
+    Children:
+      - lblPsMobACCap:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =9
+            Text: ="MOBILITY ADDRESS CODE"
+      - cmbPsMobAC:
+          Control: ComboBox@0.0.51
+          Properties:
+            AccessibleLabel: ="Mobility Address Code"
+            AlignInContainer: =AlignInContainer.Stretch
+            DefaultSelectedItems: =If(tglPsMobility.Checked, Filter(Choices([@EmployeeStatusTable].MobilityAC), Value = Coalesce(psRecord.MobilityAC.Value, psPrev.MobilityAC.Value)))
+            DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+            FillPortions: =0
+            Height: =36
+            Items: =Choices([@EmployeeStatusTable].MobilityAC)

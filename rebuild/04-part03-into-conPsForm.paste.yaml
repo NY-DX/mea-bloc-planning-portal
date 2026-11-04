@@ -1,0 +1,41 @@
+- lblPsSecMobility:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiGold
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =22
+      Size: =10
+      Text: ="MOBILITY / TRANSFER"
+- conPsRowMobility:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      DropShadow: =DropShadow.None
+      FillPortions: =0
+      Height: =64
+      LayoutDirection: =LayoutDirection.Horizontal
+      LayoutGap: =24
+      LayoutMinHeight: =64
+- lblPsSecRemark:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiGold
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =22
+      Size: =10
+      Text: ="REMARK"
+- txtPsRemark:
+    Control: TextInput@0.0.54
+    Properties:
+      AccessibleLabel: ="Remark"
+      AlignInContainer: =AlignInContainer.Stretch
+      DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+      FillPortions: =0
+      Height: =36
+      Placeholder: ="Optional note for this year"
+      Value: =psRecord.Remark

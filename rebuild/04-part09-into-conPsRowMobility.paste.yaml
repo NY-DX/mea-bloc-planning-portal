@@ -1,0 +1,57 @@
+- fldPsMobility:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =4
+    Children:
+      - lblPsMobilityCap:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =9
+            Text: ="ON MOBILITY"
+      - tglPsMobility:
+          Control: Toggle@1.1.5
+          Properties:
+            AccessibleLabel: ="Mobility"
+            Checked: =Coalesce(psRecord.Mobility, psPrev.Mobility, false)
+            DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+            Height: =36
+            Label: =If(Self.Checked, "Yes", "No")
+- fldPsMobRegion:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =4
+      Visible: =tglPsMobility.Checked
+    Children:
+      - lblPsMobRegionCap:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =9
+            Text: ="MOBILITY REGION"
+      - cmbPsMobRegion:
+          Control: ComboBox@0.0.51
+          Properties:
+            AccessibleLabel: ="Mobility Region"
+            AlignInContainer: =AlignInContainer.Stretch
+            DefaultSelectedItems: =If(tglPsMobility.Checked, Filter(Choices([@EmployeeStatusTable].MobilityRegion), Value = Coalesce(psRecord.MobilityRegion.Value, psPrev.MobilityRegion.Value)))
+            DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+            FillPortions: =0
+            Height: =36
+            Items: =Choices([@EmployeeStatusTable].MobilityRegion)

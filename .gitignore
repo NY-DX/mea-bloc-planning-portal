@@ -15,3 +15,5 @@ Src/_EditorState.pa.yaml
 !rebuild/
 !rebuild/*.yaml
 !rebuild/*.txt
+!tools/
+!tools/*.py

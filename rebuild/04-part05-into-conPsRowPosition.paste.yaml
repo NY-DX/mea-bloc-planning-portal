@@ -1,0 +1,29 @@
+- fldPsAddress:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =4
+    Children:
+      - lblPsAddressCap:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =9
+            Text: ="ADDRESS CODE"
+      - cmbPsAddress:
+          Control: ComboBox@0.0.51
+          Properties:
+            AccessibleLabel: ="Address Code"
+            AlignInContainer: =AlignInContainer.Stretch
+            DefaultSelectedItems: =Filter(Choices([@EmployeeStatusTable].AddressCode), Value = Coalesce(psRecord.AddressCode.Value, psPrev.AddressCode.Value))
+            DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+            FillPortions: =0
+            Height: =36
+            Items: =Choices([@EmployeeStatusTable].AddressCode)

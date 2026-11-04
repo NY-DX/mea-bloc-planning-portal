@@ -1,0 +1,78 @@
+- lblPsRecordInfo:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiMuted
+      FillPortions: =0
+      Height: =22
+      Size: =10
+      Text: |-
+        =If(
+            IsBlank(psRecord),
+            "FY" & psFY & " has no saved record yet" &
+                If(IsBlank(psPrev), ".", ", so the fields are pre-filled from FY" & (psFY - 1) & "."),
+            "FY" & psFY & " saved record, last updated " & Text(psRecord.'Last Updated', "dd mmm yyyy")
+        ) & If(psLocked, "  Read-only: mobility employee managed by their home department.", "")
+- lblPsSecPosition:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiGold
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =22
+      Size: =10
+      Text: ="POSITION"
+- conPsRowPosition:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      DropShadow: =DropShadow.None
+      FillPortions: =0
+      Height: =64
+      LayoutDirection: =LayoutDirection.Horizontal
+      LayoutGap: =24
+      LayoutMinHeight: =64
+- lblPsSecGrade:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiGold
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =22
+      Size: =10
+      Text: ="GRADE"
+- conPsRowGrade:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      DropShadow: =DropShadow.None
+      FillPortions: =0
+      Height: =64
+      LayoutDirection: =LayoutDirection.Horizontal
+      LayoutGap: =24
+      LayoutMinHeight: =64
+- lblPsSecStatus:
+    Control: Label@2.5.1
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      Color: =uiGold
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =22
+      Size: =10
+      Text: ="STATUS"
+- conPsRowStatus:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      DropShadow: =DropShadow.None
+      FillPortions: =0
+      Height: =64
+      LayoutDirection: =LayoutDirection.Horizontal
+      LayoutGap: =24
+      LayoutMinHeight: =64

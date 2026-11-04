@@ -1,0 +1,24 @@
+// Set these by hand (select the control, choose the property, paste the formula).
+
+// galPsEmployees  >  OnSelect
+Set(psSelected, ThisItem);
+Set(psLocked, ThisItem.Kind = "Mobility" && ThisItem.AddressCode <> "Outside");
+ClearCollect(psStatus, Filter(EmployeeStatusTable, Employee.Id = ThisItem.ID));
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1))
+
+// galPsYears  >  OnSelect
+Set(psFY, ThisItem.FY);
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1))
+
+// lblMainTitle  >  Text          (from piece 2, re-apply if it was lost)
+If(IsBlank(psSelected), "SELECT AN EMPLOYEE", Upper(psSelected.FullName))
+
+// lblMainPlaceholder  >  Text    (from piece 2, re-apply if it was lost)
+If(
+    IsBlank(psSelected),
+    "Pick someone from the list on the left.",
+    psSelected.AddressCode & "  ·  " & psSelected.EmployeeNo &
+    If(psSelected.Kind = "Mobility", "  ·  Mobility (assigned to one of your departments)", "")
+)

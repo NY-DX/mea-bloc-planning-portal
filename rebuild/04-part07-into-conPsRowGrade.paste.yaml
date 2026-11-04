@@ -1,0 +1,27 @@
+- fldPsPromotion:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =4
+    Children:
+      - lblPsPromotionCap:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =9
+            Text: ="PROMOTION THIS YEAR"
+      - tglPsPromotion:
+          Control: Toggle@1.1.5
+          Properties:
+            AccessibleLabel: ="Promotion"
+            Checked: =Coalesce(psRecord.Promotion, false)
+            DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+            Height: =36
+            Label: =If(Self.Checked, "Yes", "No")

@@ -1,0 +1,11 @@
+- conPsForm:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      AlignInContainer: =AlignInContainer.Stretch
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =10
+      LayoutOverflowY: =LayoutOverflow.Scroll
+      Visible: =!IsBlank(psSelected)

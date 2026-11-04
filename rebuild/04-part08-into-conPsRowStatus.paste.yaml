@@ -1,0 +1,81 @@
+- fldPsHQ:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =4
+    Children:
+      - lblPsHQCap:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =9
+            Text: ="HQ EMPLOYMENT"
+      - tglPsHQ:
+          Control: Toggle@1.1.5
+          Properties:
+            AccessibleLabel: ="HQ Employment"
+            Checked: =Coalesce(psRecord.HQEmployment, psPrev.HQEmployment, false)
+            DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+            Height: =36
+            Label: =If(Self.Checked, "Yes", "No")
+- fldPsResignation:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =4
+    Children:
+      - lblPsResignationCap:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =9
+            Text: ="RESIGNATION"
+      - tglPsResignation:
+          Control: Toggle@1.1.5
+          Properties:
+            AccessibleLabel: ="Resignation"
+            Checked: =Coalesce(psRecord.Resignation, false)
+            DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+            Height: =36
+            Label: =If(Self.Checked, "Yes", "No")
+- fldPsSuccession:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =4
+    Children:
+      - lblPsSuccessionCap:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =9
+            Text: ="SUCCESSION NEEDED"
+      - tglPsSuccession:
+          Control: Toggle@1.1.5
+          Properties:
+            AccessibleLabel: ="Succession"
+            Checked: =Coalesce(psRecord.Succession, false)
+            DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+            Height: =36
+            Label: =If(Self.Checked, "Yes", "No")

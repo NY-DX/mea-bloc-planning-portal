@@ -1,0 +1,70 @@
+- fldPsRegional:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =4
+    Children:
+      - lblPsRegionalCap:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =9
+            Text: ="REGIONAL GRADE"
+      - cmbPsRegional:
+          Control: ComboBox@0.0.51
+          Properties:
+            AccessibleLabel: ="Regional Grade"
+            AlignInContainer: =AlignInContainer.Stretch
+            DefaultSelectedItems: =Filter(Choices([@EmployeeStatusTable].RegionalGrade), Value = Coalesce(psRecord.RegionalGrade.Value, psPrev.RegionalGrade.Value))
+            DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+            FillPortions: =0
+            Height: =36
+            Items: =Choices([@EmployeeStatusTable].RegionalGrade)
+- fldPsGlobal:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =4
+    Children:
+      - lblPsGlobalCap:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =9
+            Text: ="GLOBAL GRADE (FROM REGIONAL)"
+      - lblPsGlobalValue:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiInk
+            Fill: =RGBA(0, 0, 0, 0.04)
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =36
+            PaddingLeft: =10
+            Size: =12
+            Text: |-
+              =Switch(
+                  cmbPsRegional.Selected.Value,
+                  "(MEA) E", "N/A",
+                  "(MEA) G1", "GG5", "(MEA) G1+", "GG5", "(MEA) G2", "GG5", "(MEA) G2+", "GG5",
+                  "(MEA) G3", "GG4", "(MEA) G3+", "GG4",
+                  "(MEA) G4M / G4P", "GG3",
+                  "(MEA) M2/G5", "GG2", "(MEA) M2+/G6", "GG2",
+                  "(MEA) M1/G7", "GG1",
+                  "—"
+              )

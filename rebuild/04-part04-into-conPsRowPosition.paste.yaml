@@ -1,0 +1,58 @@
+- fldPsBizCorp:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =4
+    Children:
+      - lblPsBizCorpCap:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =9
+            Text: ="BIZ / CORP"
+      - cmbPsBizCorp:
+          Control: ComboBox@0.0.51
+          Properties:
+            AccessibleLabel: ="Biz/Corp"
+            AlignInContainer: =AlignInContainer.Stretch
+            DefaultSelectedItems: =Filter(Choices([@EmployeeStatusTable].EmploymentType), Value = Coalesce(psRecord.EmploymentType.Value, psPrev.EmploymentType.Value))
+            DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+            FillPortions: =0
+            Height: =36
+            Items: =Choices([@EmployeeStatusTable].EmploymentType)
+- fldPsHRCode:
+    Control: GroupContainer@1.5.0
+    Variant: AutoLayout
+    Properties:
+      DropShadow: =DropShadow.None
+      FillPortions: =1
+      LayoutDirection: =LayoutDirection.Vertical
+      LayoutGap: =4
+    Children:
+      - lblPsHRCodeCap:
+          Control: Label@2.5.1
+          Properties:
+            AlignInContainer: =AlignInContainer.Stretch
+            Color: =uiMuted
+            FillPortions: =0
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =9
+            Text: ="HR CODE"
+      - cmbPsHRCode:
+          Control: ComboBox@0.0.51
+          Properties:
+            AccessibleLabel: ="HR Code"
+            AlignInContainer: =AlignInContainer.Stretch
+            DefaultSelectedItems: =Filter(Choices([@EmployeeStatusTable].Division), Value = Coalesce(psRecord.Division.Value, psPrev.Division.Value))
+            DisplayMode: =If(psLocked, DisplayMode.View, DisplayMode.Edit)
+            FillPortions: =0
+            Height: =36
+            Items: =Choices([@EmployeeStatusTable].Division)
