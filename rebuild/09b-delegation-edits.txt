@@ -1,0 +1,64 @@
+// Delegation fix: the Employee lookup now shows the employee's ID, so filter on Employee.Value
+// (SharePoint can filter on it) instead of Employee.Id (it cannot; Power Apps then only sees
+// the first 500/2000 rows). Deletes now use the employee's records already loaded in psStatus.
+//
+// 0. Studio: Data panel > EmployeeStatusTable > ... > Refresh  (so Studio sees the changed column)
+//
+// Replace these whole formulas:
+//   PlanningScreen  > OnVisible   -> 09a-PlanningScreen.OnVisible.fx.txt
+//   lblBtnSave      > OnSelect    -> 09c-lblBtnSave.OnSelect.fx.txt
+//   lblBtnSaveAll   > OnSelect    -> 09d-lblBtnSaveAll.OnSelect.fx.txt
+// and these (below):
+
+// galPsEmployees  >  OnSelect
+Set(psSelected, ThisItem);
+Set(psLocked, ThisItem.Kind = "Mobility" && ThisItem.AddressCode <> "Outside");
+Set(psConfirmRemove, false);
+ClearCollect(psStatus, Filter(EmployeeStatusTable, Employee.Value = Text(ThisItem.ID)));
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+Set(psPrev, LookUp(psStatus, Year(Date) = psFY - 1));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false);
+// Promotion suggests the grade one step above last year's regional grade
+Set(
+    psPromoGrade,
+    With(
+        {pos: LookUp(ForAll(Sequence(CountRows(gradeLadder)) As s, {N: s.Value, G: Index(gradeLadder, s.Value).Value}), G = psPrev.RegionalGrade.Value).N},
+        If(!IsBlank(pos) && pos < CountRows(gradeLadder), Index(gradeLadder, pos + 1).Value)
+    )
+);
+
+// lblBtnMenu  >  OnSelect   (OVERVIEW)
+Clear(psAllStatus);
+ForAll(
+    psEmployees As emp,
+    Collect(psAllStatus, Filter(EmployeeStatusTable, Employee.Value = Text(emp.ID)))
+);
+Set(psOvPick, 0);
+Set(psShowOverview, true)
+
+// lblPsRemoveHire  >  OnSelect
+If(
+    !psConfirmRemove,
+    Set(psConfirmRemove, true),
+
+    Set(psConfirmRemove, false);
+    Set(psHireError, "");
+    IfError(
+        Remove(EmployeeStatusTable, psStatus);
+        Remove(EmployeeTable, LookUp(EmployeeTable, ID = psSelected.ID));
+        true,
+        Set(psHireError, FirstError.Message)
+    );
+    If(
+        IsBlank(psHireError),
+        Notify("Removed planned hire " & psSelected.FullName & ".", NotificationType.Success);
+        RemoveIf(psEmployees, ID = psSelected.ID);
+        Set(psSelected, Blank());
+        Clear(psStatus),
+        Notify("Could not remove: " & psHireError, NotificationType.Error)
+    )
+)
+
+// Check afterwards: App checker (stethoscope icon) > Performance / Formulas should no longer
+// list "EmployeeId.Id" for PlanningScreen. Local filters on psStatus / psAllStatus are fine.

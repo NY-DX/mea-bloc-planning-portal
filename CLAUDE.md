@@ -36,3 +36,11 @@ Built piece by piece from `rebuild/` (numbered files). Everything it creates is
 prefixed `ps` (variables, collections) and it does not depend on the old screens.
 Theme and shared tables are named formulas in App.Formulas (`ui*`, `gradeLadder`).
 Repo: commit every piece; the old screens stay until PlanningScreen replaces them.
+
+## SharePoint delegation (critical: records silently disappear past 500/2000 rows)
+- `EmployeeStatusTable.Employee` is a lookup that displays the employee's **ID** (changed from
+  LastName). Filter with `Employee.Value = Text(<employee ID>)`; `Employee.Id = ...` is NOT
+  delegated (Power Apps would only see the first 500/2000 rows and Save could create duplicates).
+- Lookup `.Value` and plain-column `=` filters are delegated; functions like `Lower()` on a
+  column are not. Check the App checker for "OpNotSupportedByColumn" after every change.
+- Delete via records already loaded with a delegated filter (`Remove(List, Filter(psStatus, ...))`).
