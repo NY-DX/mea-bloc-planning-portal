@@ -1,0 +1,115 @@
+// VERSION 16: planned hires per session. Apply AFTER version 15 (read-only overview).
+// This is everything from version 14 except galPsOverview > OnSelect (version 15 set it to false).
+//
+// Order matters:
+//   1. SharePoint: EmployeeTable has the Number column PlannedSession (done, tagged by hand).
+//   2. Studio: Data panel > EmployeeTable > ... > Refresh   (so Studio sees PlannedSession)
+//   3. PlanningScreen > OnVisible  ->  replace with 16a-PlanningScreen.OnVisible.fx.txt
+//   4. Reload the app (or Run OnVisible) so the employee list gets its PlanSession field.
+//   5. Then set the formulas below. If Studio underlines PlanSession in red, step 4 has not run yet.
+//
+// Formulas to replace (whole formula each):
+//   galPsEmployees  > Items
+//   lblPsCount      > Text
+//   galPsOverview   > Items
+//   lblPsHireCreate > OnSelect
+//   lblPsRemoveHire > Visible
+//   lblPsRemoveHire > OnSelect
+
+// galPsEmployees  >  Items   (planned hires only in the session they were planned in)
+Sort(
+    Filter(
+        psEmployees,
+        (Kind <> "Planned" || PlanSession = psSession) &&
+        (
+            IsBlank(txtPsSearch.Value) ||
+            txtPsSearch.Value in FullName ||
+            txtPsSearch.Value in EmployeeNo
+        )
+    ),
+    Kind & "|" & FullName
+)
+
+// lblPsCount  >  Text
+CountRows(galPsEmployees.AllItems) & " of " & CountRows(Filter(psEmployees, Kind <> "Planned" || PlanSession = psSession)) & " employees"
+
+// galPsOverview  >  Items   (each session view shows only its own planned hires)
+Sort(Filter(psEmployees, Kind <> "Planned" || PlanSession = psOvSession), Kind & "|" & FullName)
+
+// lblPsHireCreate  >  OnSelect   (stamps the planned hire with the current session)
+Set(psHireError, "");
+IfError(
+    Set(
+        psNewHire,
+        Patch(
+            EmployeeTable,
+            Defaults(EmployeeTable),
+            {
+                Title: Trim(txtPsHireName.Value),
+                'FirstName ': Trim(txtPsHireName.Value),
+                'LastName ': "",
+                'Employee ID': "TBH FY" & cmbPsHireYear.Selected.Value,
+                AddressCode: cmbPsHireDept.Selected,
+                PlannedHire: true,
+                PlannedSession: psSession
+            }
+        )
+    ),
+    Set(psHireError, FirstError.Message)
+);
+If(
+    IsBlank(psHireError),
+    Collect(
+        psEmployees,
+        {
+            ID: psNewHire.ID,
+            FullName: Trim(txtPsHireName.Value),
+            AddressCode: cmbPsHireDept.Selected.Value,
+            EmployeeNo: "TBH FY" & cmbPsHireYear.Selected.Value,
+            Kind: "Planned",
+            PlanSession: psSession
+        }
+    );
+    Set(psSelected, LookUp(psEmployees, ID = psNewHire.ID));
+    Set(psLocked, false);
+    Set(psConfirmRemove, false);
+    Clear(psStatus);
+    Clear(psHistory);
+    Set(psHint, Blank());
+    Set(psFY, Value(cmbPsHireYear.Selected.Value));
+    Set(psRecord, Blank());
+    Set(psPrev, Blank());
+    Set(psRegionalOverride, Blank());
+    Set(psConfirmResign, false);
+    Set(psShowHire, false);
+    Notify("Planned hire created. Fill in FY" & psFY & " and press SAVE (or SAVE ALL for the later years).", NotificationType.Success),
+    Notify("Could not create the planned hire: " & psHireError, NotificationType.Error)
+)
+
+// lblPsRemoveHire  >  Visible
+!IsBlank(psSelected) && psSelected.Kind = "Planned" && psSelected.PlanSession = psSession
+
+// lblPsRemoveHire  >  OnSelect   (deletes only this session's rows; earlier sessions are never touched)
+If(
+    !psConfirmRemove,
+    Set(psConfirmRemove, true),
+
+    Set(psConfirmRemove, false);
+    Set(psHireError, "");
+    IfError(
+        Remove(EmployeeStatusTable, psStatus);
+        Remove(EmployeeTable, LookUp(EmployeeTable, ID = psSelected.ID));
+        true,
+        Set(psHireError, FirstError.Message)
+    );
+    If(
+        IsBlank(psHireError),
+        Notify("Removed planned hire " & psSelected.FullName & ".", NotificationType.Success);
+        RemoveIf(psEmployees, ID = psSelected.ID);
+        Set(psSelected, Blank());
+        Clear(psStatus);
+        Clear(psHistory),
+        Notify("Could not remove: " & psHireError, NotificationType.Error)
+    )
+)
+
