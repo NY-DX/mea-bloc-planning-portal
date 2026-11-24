@@ -1,0 +1,30 @@
+- lblPsOvSessCur:
+    Control: Label@2.5.1
+    Properties:
+      Align: =Align.Center
+      BorderColor: =uiGold
+      BorderThickness: =1
+      Color: =If(psOvSession = psSession, uiInk, uiGold)
+      Fill: =If(psOvSession = psSession, uiGold, RGBA(0, 0, 0, 0))
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =36
+      OnSelect: =Set(psOvSession, psSession)
+      Size: =10
+      Text: =(psSession) & " SESSION"
+      Width: =140
+- lblPsOvSessPrev:
+    Control: Label@2.5.1
+    Properties:
+      Align: =Align.Center
+      BorderColor: =uiGold
+      BorderThickness: =1
+      Color: =If(psOvSession = psSession - 1, uiInk, uiGold)
+      Fill: =If(psOvSession = psSession - 1, uiGold, RGBA(0, 0, 0, 0))
+      FillPortions: =0
+      FontWeight: =FontWeight.Bold
+      Height: =36
+      OnSelect: =Set(psOvSession, psSession - 1)
+      Size: =10
+      Text: =(psSession - 1) & " SESSION"
+      Width: =140

@@ -1,0 +1,86 @@
+// Overview by planning session. First paste 13b-into-conPsOvTop.paste.yaml (right-click conPsOvTop).
+// The two SESSION buttons land after CLOSE; drag them before lblPsOvLegend if you prefer.
+
+// lblBtnMenu  >  OnSelect   (loads the current and the previous session, opens on the current one)
+Clear(psAllStatus);
+ForAll(
+    psEmployees As emp,
+    With(
+        {ref: Text(emp.ID)},
+        Collect(
+            psAllStatus,
+            Filter(EmployeeStatusTable, Employee.Value = ref && (PlanningSession = psSession || PlanningSession = psSession - 1))
+        )
+    )
+);
+Set(psOvSession, psSession);
+Set(psOvPick, 0);
+Set(psShowOverview, true)
+
+// galPsOvCells (inside each overview row)  >  Items   (the five years planned in the viewed session)
+ForAll(Sequence(5) As n, {FY: psOvSession + n.Value, EmpId: ThisItem.ID})
+
+// galPsOvCells  >  OnSelect   (opens the employee/year only for the current session; previous is read-only)
+If(
+    psOvSession = psSession,
+    Set(psSelected, LookUp(psEmployees, ID = ThisItem.EmpId));
+    Set(psLocked, psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
+    Set(psConfirmRemove, false);
+    ClearCollect(psHistory, Filter(EmployeeStatusTable, Employee.Value = Text(ThisItem.EmpId)));
+    ClearCollect(psStatus, Filter(psHistory, PlanningSession = psSession));
+    Set(psFY, ThisItem.FY);
+    Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+    // Pre-fill source: the year before, this session's record first, otherwise its most recent record
+    Set(
+        psPrev,
+        With(
+            {current: LookUp(psStatus, Year(Date) = psFY - 1)},
+            If(
+                !IsBlank(current),
+                current,
+                First(Sort(Filter(psHistory, Year(Date) = psFY - 1), PlanningSession, SortOrder.Descending))
+            )
+        )
+    );
+    // Hint: what the previous session planned for this same year (shown in brackets, never pre-filled)
+    Set(psHint, LookUp(psHistory, PlanningSession = psSession - 1 && Year(Date) = psFY));
+    Set(psRegionalOverride, Blank());
+    Set(psConfirmResign, false);
+    Set(psShowOverview, false)
+)
+
+// lblPsOvCell (inside galPsOvCells)  >  Text
+With(
+    {r: LookUp(psAllStatus, Employee.Id = ThisItem.EmpId && Year(Date) = ThisItem.FY && PlanningSession = psOvSession)},
+    If(
+        IsBlank(r), "—",
+        Substitute(r.RegionalGrade.Value, "(MEA) ", "") &
+        If(r.Promotion, "  P", "") & If(r.Resignation, "  R", "") &
+        If(r.Mobility, "  M", "") & If(r.Succession, "  S", "")
+    )
+)
+
+// lblPsOvCell  >  Fill   (previous session in neutral gold, not judged up to date / outdated)
+With(
+    {r: LookUp(psAllStatus, Employee.Id = ThisItem.EmpId && Year(Date) = ThisItem.FY && PlanningSession = psOvSession)},
+    If(
+        IsBlank(r), RGBA(0, 0, 0, 0.04),
+        psOvSession <> psSession, RGBA(212, 160, 23, 0.12),
+        DateDiff(r.'Last Updated', Today(), TimeUnit.Months) > psOutdatedMonths, RGBA(220, 70, 60, 0.16),
+        RGBA(90, 190, 110, 0.16)
+    )
+)
+
+// Column headings: lblPsOvH1 ... lblPsOvH5  >  Text   (n = 1 to 5)
+"FY" & (psOvSession + 1)
+"FY" & (psOvSession + 2)
+"FY" & (psOvSession + 3)
+"FY" & (psOvSession + 4)
+"FY" & (psOvSession + 5)
+
+// lblPsOvLegend  >  Text
+If(
+    psOvSession = psSession,
+    "Regional grade per year  ·  P promotion  ·  R resignation  ·  M mobility  ·  S succession  ·  green up to date, red outdated, grey no data  ·  click a cell to open it",
+    "The " & psOvSession & " session's plan (read-only)  ·  P promotion  ·  R resignation  ·  M mobility  ·  S succession"
+)
