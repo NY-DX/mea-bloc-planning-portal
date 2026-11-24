@@ -1,0 +1,132 @@
+// Planned hires per session. First add the Number column PlannedSession to EmployeeTable
+// (done, tagged by hand), then Data panel > EmployeeTable > ... > Refresh.
+// Replace:  PlanningScreen > OnVisible  ->  14a-PlanningScreen.OnVisible.fx.txt
+// Then set these (whole formulas):
+
+// galPsEmployees  >  Items   (planned hires only in the session they were planned in)
+Sort(
+    Filter(
+        psEmployees,
+        (Kind <> "Planned" || PlanSession = psSession) &&
+        (
+            IsBlank(txtPsSearch.Value) ||
+            txtPsSearch.Value in FullName ||
+            txtPsSearch.Value in EmployeeNo
+        )
+    ),
+    Kind & "|" & FullName
+)
+
+// lblPsCount  >  Text
+CountRows(galPsEmployees.AllItems) & " of " & CountRows(Filter(psEmployees, Kind <> "Planned" || PlanSession = psSession)) & " employees"
+
+// galPsOverview  >  Items   (each session view shows only its own planned hires)
+Sort(Filter(psEmployees, Kind <> "Planned" || PlanSession = psOvSession), Kind & "|" & FullName)
+
+// galPsOverview  >  OnSelect   (FIX: never open previous-session rows for editing;
+//   reloads the employee from SharePoint and keeps only current-session rows)
+If(
+    psOvSession = psSession,
+    Set(psSelected, LookUp(psEmployees, ID = ThisItem.ID));
+    Set(psLocked, psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
+    Set(psConfirmRemove, false);
+    ClearCollect(psHistory, Filter(EmployeeStatusTable, Employee.Value = Text(ThisItem.ID)));
+    ClearCollect(psStatus, Filter(psHistory, PlanningSession = psSession));
+    If(psOvPick > 0, Set(psFY, psOvPick));
+    Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+    // Pre-fill source: the year before, this session's record first, otherwise its most recent record
+    Set(
+        psPrev,
+        With(
+            {current: LookUp(psStatus, Year(Date) = psFY - 1)},
+            If(
+                !IsBlank(current),
+                current,
+                First(Sort(Filter(psHistory, Year(Date) = psFY - 1), PlanningSession, SortOrder.Descending))
+            )
+        )
+    );
+    // Hint: what the previous session planned for this same year (shown in brackets, never pre-filled)
+    Set(psHint, LookUp(psHistory, PlanningSession = psSession - 1 && Year(Date) = psFY));
+    Set(psRegionalOverride, Blank());
+    Set(psConfirmResign, false);
+    Set(psShowOverview, false)
+)
+
+// lblPsHireCreate  >  OnSelect   (stamps the planned hire with the current session)
+Set(psHireError, "");
+IfError(
+    Set(
+        psNewHire,
+        Patch(
+            EmployeeTable,
+            Defaults(EmployeeTable),
+            {
+                Title: Trim(txtPsHireName.Value),
+                'FirstName ': Trim(txtPsHireName.Value),
+                'LastName ': "",
+                'Employee ID': "TBH FY" & cmbPsHireYear.Selected.Value,
+                AddressCode: cmbPsHireDept.Selected,
+                PlannedHire: true,
+                PlannedSession: psSession
+            }
+        )
+    ),
+    Set(psHireError, FirstError.Message)
+);
+If(
+    IsBlank(psHireError),
+    Collect(
+        psEmployees,
+        {
+            ID: psNewHire.ID,
+            FullName: Trim(txtPsHireName.Value),
+            AddressCode: cmbPsHireDept.Selected.Value,
+            EmployeeNo: "TBH FY" & cmbPsHireYear.Selected.Value,
+            Kind: "Planned",
+            PlanSession: psSession
+        }
+    );
+    Set(psSelected, LookUp(psEmployees, ID = psNewHire.ID));
+    Set(psLocked, false);
+    Set(psConfirmRemove, false);
+    Clear(psStatus);
+    Clear(psHistory);
+    Set(psHint, Blank());
+    Set(psFY, Value(cmbPsHireYear.Selected.Value));
+    Set(psRecord, Blank());
+    Set(psPrev, Blank());
+    Set(psRegionalOverride, Blank());
+    Set(psConfirmResign, false);
+    Set(psShowHire, false);
+    Notify("Planned hire created. Fill in FY" & psFY & " and press SAVE (or SAVE ALL for the later years).", NotificationType.Success),
+    Notify("Could not create the planned hire: " & psHireError, NotificationType.Error)
+)
+
+// lblPsRemoveHire  >  Visible
+!IsBlank(psSelected) && psSelected.Kind = "Planned" && psSelected.PlanSession = psSession
+
+// lblPsRemoveHire  >  OnSelect   (deletes only this session's rows; earlier sessions are never touched)
+If(
+    !psConfirmRemove,
+    Set(psConfirmRemove, true),
+
+    Set(psConfirmRemove, false);
+    Set(psHireError, "");
+    IfError(
+        Remove(EmployeeStatusTable, psStatus);
+        Remove(EmployeeTable, LookUp(EmployeeTable, ID = psSelected.ID));
+        true,
+        Set(psHireError, FirstError.Message)
+    );
+    If(
+        IsBlank(psHireError),
+        Notify("Removed planned hire " & psSelected.FullName & ".", NotificationType.Success);
+        RemoveIf(psEmployees, ID = psSelected.ID);
+        Set(psSelected, Blank());
+        Clear(psStatus);
+        Clear(psHistory),
+        Notify("Could not remove: " & psHireError, NotificationType.Error)
+    )
+)
+

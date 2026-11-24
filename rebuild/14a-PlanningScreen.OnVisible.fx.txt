@@ -1,0 +1,116 @@
+// PlanningScreen.OnVisible (replaces the earlier versions; planning sessions + planned-hire sessions).
+// Everything this screen creates is prefixed "ps", so it never depends on the old screens.
+
+// Fiscal years start on 1 April. Planning covers the next five fiscal years.
+Set(psFiscalBase, If(Month(Today()) >= 4, Year(Today()), Year(Today()) - 1));
+// Planning session = the current fiscal year; records are stamped with it when saved
+Set(psSession, psFiscalBase);
+ClearCollect(
+    psYears,
+    ForAll(
+        Sequence(5, 1) As n,
+        {FY: psFiscalBase + n.Value, StartDate: Date(psFiscalBase + n.Value, 4, 1)}
+    )
+);
+If(IsBlank(psFY) || !(psFY in psYears.FY), Set(psFY, First(psYears).FY));
+// A record is "outdated" when it was last updated more than this many months ago.
+Set(psOutdatedMonths, 10);
+
+// The current General Manager's departments
+Set(psUserEmail, Lower(User().Email));
+ClearCollect(
+    psDepts,
+    Filter(DepartmentTable, Lower(GeneralManager.Email) = psUserEmail)
+);
+
+// Direct employees and planned hires: home address code is one of the GM's departments
+Clear(psEmployees);
+ForAll(
+    psDepts As dept,
+    Collect(
+        psEmployees,
+        ForAll(
+            Filter(EmployeeTable, AddressCode.Value = dept.AddressCode) As emp,
+            {
+                ID: emp.ID,
+                FullName: Trim(emp.'FirstName ' & " " & emp.'MiddleName ' & " " & emp.'LastName '),
+                AddressCode: emp.AddressCode.Value,
+                EmployeeNo: emp.'Employee ID',
+                Kind: If(emp.PlannedHire, "Planned", "Direct"),
+                PlanSession: emp.PlannedSession
+            }
+        )
+    )
+);
+
+// Mobility employees: a current-session record (any year) assigns them to one of the GM's departments.
+// Matched by employee ID (the old screen matched by last name).
+Clear(psMobilityIds);
+ForAll(
+    psDepts As dept,
+    Collect(
+        psMobilityIds,
+        ForAll(
+            Filter(EmployeeStatusTable, MobilityAC.Value = dept.AddressCode && PlanningSession = psSession) As st,
+            {EmpId: st.Employee.Id}
+        )
+    )
+);
+ForAll(
+    Filter(Distinct(psMobilityIds, EmpId), !(Value in psEmployees.ID)) As mob,
+    With(
+        {emp: LookUp(EmployeeTable, ID = mob.Value)},
+        If(
+            !IsBlank(emp),
+            Collect(
+                psEmployees,
+                {
+                    ID: emp.ID,
+                    FullName: Trim(emp.'FirstName ' & " " & emp.'MiddleName ' & " " & emp.'LastName '),
+                    AddressCode: emp.AddressCode.Value,
+                    EmployeeNo: emp.'Employee ID',
+                    Kind: "Mobility",
+                    PlanSession: emp.PlannedSession
+                }
+            )
+        )
+    )
+);
+
+// Keep the selection only if that employee is still in the list, and reload their records
+// Planned hires belong to the session they were planned in
+If(
+    !(psSelected.ID in psEmployees.ID) || (psSelected.Kind = "Planned" && psSelected.PlanSession <> psSession),
+    Set(psSelected, Blank())
+);
+If(
+    IsBlank(psSelected),
+    Clear(psStatus);
+    Clear(psHistory),
+    ClearCollect(psHistory, Filter(EmployeeStatusTable, Employee.Value = Text(psSelected.ID)));
+    ClearCollect(psStatus, Filter(psHistory, PlanningSession = psSession))
+);
+
+// Mobility employees are read-only unless their home address code is "Outside" (same rule as before)
+Set(psLocked, !IsBlank(psSelected) && psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
+// The record shown in the form, and the previous year's record used to pre-fill a new one
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+// Pre-fill source: the year before, this session's record first, otherwise its most recent record
+Set(
+    psPrev,
+    With(
+        {current: LookUp(psStatus, Year(Date) = psFY - 1)},
+        If(
+            !IsBlank(current),
+            current,
+            First(Sort(Filter(psHistory, Year(Date) = psFY - 1), PlanningSession, SortOrder.Descending))
+        )
+    )
+);
+// Hint: what the previous session planned for this same year (shown in brackets, never pre-filled)
+Set(psHint, LookUp(psHistory, PlanningSession = psSession - 1 && Year(Date) = psFY));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false);
+Set(psConfirmRemove, false);
+Set(psShowHire, false);
+Set(psShowOverview, false);

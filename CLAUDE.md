@@ -52,3 +52,9 @@ Repo: commit every piece; the old screens stay until PlanningScreen replaces the
 - Pre-fill has ONE source: the year before (this session's record, else that year's most recent).
   The previous session's plan for the same year (`psHint`) is shown only in caption brackets,
   never pre-filled, so the two can never conflict.
+- **Never change earlier sessions' data** (business rule: last year's plans must stay as they were).
+  Everything that edits or deletes must work on `psStatus` (current session) only, never on
+  `psHistory` or `psAllStatus` (which hold other sessions too).
+- Planned hires belong to the session they were planned in: `EmployeeTable.PlannedSession`
+  (stamped on CREATE). The list shows only this session's hires; each overview session view
+  shows only that session's hires.
