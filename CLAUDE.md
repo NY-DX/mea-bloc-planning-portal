@@ -59,3 +59,5 @@ Repo: commit every piece; the old screens stay until PlanningScreen replaces the
 - Planned hires belong to the session they were planned in: `EmployeeTable.PlannedSession`
   (stamped on CREATE). The list shows only this session's hires; each overview session view
   shows only that session's hires.
+- Gotcha: a column read only inside `ForAll(Filter(EmployeeTable, ...) As emp, {...})` can come
+  back blank (seen with `PlannedSession`). Read such values with `LookUp(List, ID = emp.ID).Column`.
