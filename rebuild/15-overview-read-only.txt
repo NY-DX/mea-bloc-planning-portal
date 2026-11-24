@@ -1,0 +1,38 @@
+// Overview becomes read-only: no clicking opens anything (both sessions).
+
+// galPsOverview  >  OnSelect
+false
+
+// lblPsOvName (inside galPsOverview)  >  OnSelect
+false
+
+// galPsOvCells (inside each overview row)  >  OnSelect
+false
+
+// lblPsOvCell (inside galPsOvCells)  >  OnSelect
+false
+
+// lblPsOvLegend  >  Text   ("click a cell to open it" removed)
+If(
+    psOvSession = psSession,
+    "Regional grade per year  ·  P promotion  ·  R resignation  ·  M mobility  ·  S succession  ·  green up to date, red outdated, grey no data",
+    "The " & psOvSession & " session's plan (read-only)  ·  P promotion  ·  R resignation  ·  M mobility  ·  S succession"
+)
+
+// lblBtnMenu  >  OnSelect   (psOvPick is no longer needed)
+Clear(psAllStatus);
+ForAll(
+    psEmployees As emp,
+    With(
+        {ref: Text(emp.ID)},
+        Collect(
+            psAllStatus,
+            Filter(EmployeeStatusTable, Employee.Value = ref && (PlanningSession = psSession || PlanningSession = psSession - 1))
+        )
+    )
+);
+Set(psOvSession, psSession);
+Set(psShowOverview, true)
+
+// Optional: galPsOverview  >  TemplateFill   (no "selected" highlight, since rows can't be selected)
+RGBA(0, 0, 0, 0)
