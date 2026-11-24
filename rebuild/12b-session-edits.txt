@@ -1,0 +1,169 @@
+// Planning sessions: set these by hand (select the control, choose the property, paste).
+// First add the Number column  PlanningSession  to EmployeeStatusTable (no decimals),
+// tag the existing rows, then Data panel > EmployeeStatusTable > ... > Refresh.
+
+// Replace these whole formulas with the files:
+//   PlanningScreen > OnVisible  -> 12a-PlanningScreen.OnVisible.fx.txt
+//   lblBtnSave     > OnSelect   -> 12c-lblBtnSave.OnSelect.fx.txt
+//   lblBtnSaveAll  > OnSelect   -> 12d-lblBtnSaveAll.OnSelect.fx.txt
+
+// galPsEmployees  >  OnSelect
+Set(psSelected, ThisItem);
+Set(psLocked, ThisItem.Kind = "Mobility" && ThisItem.AddressCode <> "Outside");
+Set(psConfirmRemove, false);
+ClearCollect(psHistory, Filter(EmployeeStatusTable, Employee.Value = Text(ThisItem.ID)));
+ClearCollect(psStatus, Filter(psHistory, PlanningSession = psSession));
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+// Pre-fill source: the year before, this session's record first, otherwise its most recent record
+Set(
+    psPrev,
+    With(
+        {current: LookUp(psStatus, Year(Date) = psFY - 1)},
+        If(
+            !IsBlank(current),
+            current,
+            First(Sort(Filter(psHistory, Year(Date) = psFY - 1), PlanningSession, SortOrder.Descending))
+        )
+    )
+);
+// Hint: what the previous session planned for this same year (shown in brackets, never pre-filled)
+Set(psHint, LookUp(psHistory, PlanningSession = psSession - 1 && Year(Date) = psFY));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false)
+
+// galPsYears  >  OnSelect
+Set(psFY, ThisItem.FY);
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+// Pre-fill source: the year before, this session's record first, otherwise its most recent record
+Set(
+    psPrev,
+    With(
+        {current: LookUp(psStatus, Year(Date) = psFY - 1)},
+        If(
+            !IsBlank(current),
+            current,
+            First(Sort(Filter(psHistory, Year(Date) = psFY - 1), PlanningSession, SortOrder.Descending))
+        )
+    )
+);
+// Hint: what the previous session planned for this same year (shown in brackets, never pre-filled)
+Set(psHint, LookUp(psHistory, PlanningSession = psSession - 1 && Year(Date) = psFY));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false)
+
+// lblBtnMenu  >  OnSelect   (OVERVIEW: current session only)
+Clear(psAllStatus);
+ForAll(
+    psEmployees As emp,
+    With(
+        {ref: Text(emp.ID)},
+        Collect(psAllStatus, Filter(EmployeeStatusTable, Employee.Value = ref && PlanningSession = psSession))
+    )
+);
+Set(psOvPick, 0);
+Set(psShowOverview, true)
+
+// galPsOvCells (inside each overview row)  >  OnSelect
+Set(psSelected, LookUp(psEmployees, ID = ThisItem.EmpId));
+Set(psLocked, psSelected.Kind = "Mobility" && psSelected.AddressCode <> "Outside");
+Set(psConfirmRemove, false);
+ClearCollect(psHistory, Filter(EmployeeStatusTable, Employee.Value = Text(ThisItem.EmpId)));
+ClearCollect(psStatus, Filter(psHistory, PlanningSession = psSession));
+Set(psFY, ThisItem.FY);
+Set(psRecord, LookUp(psStatus, Year(Date) = psFY));
+// Pre-fill source: the year before, this session's record first, otherwise its most recent record
+Set(
+    psPrev,
+    With(
+        {current: LookUp(psStatus, Year(Date) = psFY - 1)},
+        If(
+            !IsBlank(current),
+            current,
+            First(Sort(Filter(psHistory, Year(Date) = psFY - 1), PlanningSession, SortOrder.Descending))
+        )
+    )
+);
+// Hint: what the previous session planned for this same year (shown in brackets, never pre-filled)
+Set(psHint, LookUp(psHistory, PlanningSession = psSession - 1 && Year(Date) = psFY));
+Set(psRegionalOverride, Blank());
+Set(psConfirmResign, false);
+Set(psShowOverview, false)
+
+// lblPsRemoveHire  >  OnSelect   (removes the planned hire's records from every session)
+If(
+    !psConfirmRemove,
+    Set(psConfirmRemove, true),
+
+    Set(psConfirmRemove, false);
+    Set(psHireError, "");
+    IfError(
+        Remove(EmployeeStatusTable, psHistory);
+        Remove(EmployeeTable, LookUp(EmployeeTable, ID = psSelected.ID));
+        true,
+        Set(psHireError, FirstError.Message)
+    );
+    If(
+        IsBlank(psHireError),
+        Notify("Removed planned hire " & psSelected.FullName & ".", NotificationType.Success);
+        RemoveIf(psEmployees, ID = psSelected.ID);
+        Set(psSelected, Blank());
+        Clear(psStatus);
+        Clear(psHistory),
+        Notify("Could not remove: " & psHireError, NotificationType.Error)
+    )
+)
+
+// lblPsRecordInfo  >  Text
+If(
+    IsBlank(psRecord),
+    "FY" & psFY & " has no saved record yet" &
+        If(IsBlank(psPrev), ".", ", so the fields are pre-filled from FY" & (psFY - 1) & "."),
+    "FY" & psFY & " saved record, last updated " & Text(psRecord.'Last Updated', "dd mmm yyyy")
+) &
+If(!IsBlank(psHint), "   ·   In brackets: the " & (psSession - 1) & " session's plan for FY" & psFY, "") &
+If(psLocked, "   ·   Read-only: mobility employee managed by their home department.", "")
+
+// ---- Captions: previous session's value in brackets (only when that session planned this year) ----
+// lblPsBizCorpCap  >  Text
+"BIZ / CORP" & If(IsBlank(psHint), "", "   (" & (psSession - 1) & ": " & Coalesce(psHint.EmploymentType.Value, "—") & ")")
+
+// lblPsHRCodeCap  >  Text
+"HR CODE" & If(IsBlank(psHint), "", "   (" & (psSession - 1) & ": " & Coalesce(psHint.Division.Value, "—") & ")")
+
+// lblPsAddressCap  >  Text
+"ADDRESS CODE" & If(IsBlank(psHint), "", "   (" & (psSession - 1) & ": " & Coalesce(psHint.AddressCode.Value, "—") & ")")
+
+// lblPsRegionalCap  >  Text
+"REGIONAL GRADE" & If(IsBlank(psHint), "", "   (" & (psSession - 1) & ": " & Coalesce(psHint.RegionalGrade.Value, "—") & ")")
+
+// lblPsGlobalCap  >  Text
+"GLOBAL GRADE (FROM REGIONAL)" & If(IsBlank(psHint), "", "   (" & (psSession - 1) & ": " & Coalesce(psHint.GlobalGrade.Value, "—") & ")")
+
+// lblPsPromotionCap  >  Text
+"PROMOTION THIS YEAR" & If(IsBlank(psHint), "", "   (" & (psSession - 1) & ": " & Coalesce(If(psHint.Promotion, "Yes", "No"), "—") & ")")
+
+// lblPsHQCap  >  Text
+"HQ EMPLOYMENT" & If(IsBlank(psHint), "", "   (" & (psSession - 1) & ": " & Coalesce(If(psHint.HQEmployment, "Yes", "No"), "—") & ")")
+
+// lblPsResignationCap  >  Text
+"RESIGNATION" & If(IsBlank(psHint), "", "   (" & (psSession - 1) & ": " & Coalesce(If(psHint.Resignation, "Yes", "No"), "—") & ")")
+
+// lblPsSuccessionCap  >  Text
+"SUCCESSION NEEDED" & If(IsBlank(psHint), "", "   (" & (psSession - 1) & ": " & Coalesce(If(psHint.Succession, "Yes", "No"), "—") & ")")
+
+// lblPsMobilityCap  >  Text
+"ON MOBILITY" & If(IsBlank(psHint), "", "   (" & (psSession - 1) & ": " & Coalesce(If(psHint.Mobility, "Yes", "No"), "—") & ")")
+
+// lblPsMobRegionCap  >  Text
+"MOBILITY REGION" & If(IsBlank(psHint), "", "   (" & (psSession - 1) & ": " & Coalesce(psHint.MobilityRegion.Value, "—") & ")")
+
+// lblPsMobACCap  >  Text
+"MOBILITY ADDRESS CODE" & If(IsBlank(psHint), "", "   (" & (psSession - 1) & ": " & Coalesce(psHint.MobilityAC.Value, "—") & ")")
+
+// lblPsSecRemark  >  Text
+"REMARK" & If(
+    IsBlank(psHint), "",
+    "   (" & (psSession - 1) & ": " &
+        If(IsBlank(psHint.Remark), "—", Left(psHint.Remark, 60) & If(Len(psHint.Remark) > 60, "…", "")) & ")"
+)
+

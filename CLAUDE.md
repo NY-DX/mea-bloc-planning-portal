@@ -44,3 +44,11 @@ Repo: commit every piece; the old screens stay until PlanningScreen replaces the
 - Lookup `.Value` and plain-column `=` filters are delegated; functions like `Lower()` on a
   column are not. Check the App checker for "OpNotSupportedByColumn" after every change.
 - Delete via records already loaded with a delegated filter (`Remove(List, Filter(psStatus, ...))`).
+
+## Planning sessions
+- `EmployeeStatusTable.PlanningSession` (Number) = the fiscal year in which a record was planned
+  (`psSession` = current fiscal base year; switches on 1 April). The screen reads, saves, copies
+  and deletes only current-session rows (`psStatus`); `psHistory` holds all of an employee's rows.
+- Pre-fill has ONE source: the year before (this session's record, else that year's most recent).
+  The previous session's plan for the same year (`psHint`) is shown only in caption brackets,
+  never pre-filled, so the two can never conflict.
